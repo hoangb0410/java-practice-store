@@ -29,3 +29,21 @@
 ---
 
 cp src/main/resources/application-example.properties src/main/resources/application.properties
+
+# Dependencies
+
+`spring-boot-starter-web`  
+`spring-boot-starter-data-jpa`  
+`spring-boot-starter-data-redis`  
+`spring-boot-starter-mail`  
+`spring-boot-starter-validation`  
+`spring-boot-devtools`  
+`spring-boot-starter-test`  
+`spring-security-test`  
+`spring-security-crypto`  
+`postgresql`  
+`lombok`  
+`aws-java-sdk-s3`  
+`java-jwt`  
+`commons-codec`  
+`springdoc-openapi-starter-webmvc-ui`
