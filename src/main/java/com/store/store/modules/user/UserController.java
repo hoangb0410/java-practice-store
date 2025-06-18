@@ -1,4 +1,4 @@
-package com.store.store.modules.user.controller;
+package com.store.store.modules.user;
 
 import java.util.List;
 
@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.store.store.common.ApiResponse;
-import com.store.store.modules.user.entity.User;
-import com.store.store.modules.user.service.IUserService;
+import com.store.store.model.User;
 
 @RestController
 @RequestMapping("/users")

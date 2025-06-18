@@ -1,11 +1,10 @@
-package com.store.store.modules.user.service;
+package com.store.store.modules.user;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.store.store.modules.user.entity.User;
-import com.store.store.modules.user.repository.UserRepository;
+import com.store.store.model.User;
 
 @Service
 public class UserServiceImpl implements IUserService {
