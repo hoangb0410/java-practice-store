@@ -47,3 +47,4 @@ cp src/main/resources/application-example.properties src/main/resources/applicat
 `java-jwt`  
 `commons-codec`  
 `springdoc-openapi-starter-webmvc-ui`
+`spring-boot-starter-security`
