@@ -51,5 +51,5 @@ cp src/main/resources/application-example.properties src/main/resources/applicat
 
 # Swagger
 
-/api/docs
-/api/swagger-ui/index.html
+- /api/docs
+- /api/swagger-ui/index.html
