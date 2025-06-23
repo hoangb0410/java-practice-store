@@ -48,3 +48,8 @@ cp src/main/resources/application-example.properties src/main/resources/applicat
 `commons-codec`  
 `springdoc-openapi-starter-webmvc-ui`
 `spring-boot-starter-security`
+
+# Swagger
+
+/api/docs
+/api/swagger-ui/index.html
