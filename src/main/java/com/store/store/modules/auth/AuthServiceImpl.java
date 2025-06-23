@@ -59,4 +59,25 @@ public class AuthServiceImpl implements IAuthService {
         redisService.delete(key);
     }
 
+    @Override
+    public AuthResponse refreshToken(String refreshToken) {
+        if (!jwtService.isTokenValid(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        String userId = jwtService.extractUserId(refreshToken);
+        String key = "refresh_token:" + userId;
+
+        String storedToken = redisService.get(key);
+        if (storedToken == null || !storedToken.equals(refreshToken)) {
+            throw new RuntimeException("Refresh token not found or mismatched");
+        }
+
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String newAccessToken = jwtService.generateAccessToken(user);
+
+        return new AuthResponse(user, newAccessToken, refreshToken);
+    }
 }

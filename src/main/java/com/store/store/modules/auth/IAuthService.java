@@ -11,4 +11,6 @@ public interface IAuthService {
     AuthResponse login(LoginRequest request);
 
     void logout(Long userId);
+
+    AuthResponse refreshToken(String refreshToken);
 }
