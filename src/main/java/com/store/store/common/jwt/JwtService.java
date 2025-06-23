@@ -49,4 +49,23 @@ public class JwtService {
         JWTVerifier verifier = JWT.require(algorithm).build();
         return verifier.verify(token);
     }
+
+    public String extractUserId(String token) {
+        try {
+            DecodedJWT decodedJWT = verifyToken(token);
+            return decodedJWT.getSubject();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid token");
+        }
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            verifyToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

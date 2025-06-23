@@ -13,7 +13,10 @@ import com.store.store.common.ErrorHelper;
 import com.store.store.model.User;
 import com.store.store.modules.auth.dto.AuthResponse;
 import com.store.store.modules.auth.dto.LoginRequest;
+import com.store.store.modules.auth.dto.RefreshTokenRequest;
 import com.store.store.modules.auth.dto.RegisterRequest;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -48,6 +51,17 @@ public class AuthController {
             return ResponseEntity.ok(ApiResponse.success("Logged out successfully", 200));
         } catch (Exception e) {
             return ErrorHelper.internalServerError("Logout failed: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<Object>> refreshAccessToken(@Valid @RequestBody RefreshTokenRequest request) {
+        try {
+            String refreshToken = request.getRefreshToken();
+            AuthResponse response = authService.refreshToken(refreshToken);
+            return ResponseEntity.ok(ApiResponse.success(response, 200));
+        } catch (Exception e) {
+            return ErrorHelper.internalServerError("Token refresh failed: " + e.getMessage());
         }
     }
 }
