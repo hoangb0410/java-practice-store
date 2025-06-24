@@ -46,7 +46,7 @@ cp src/main/resources/application-example.properties src/main/resources/applicat
 `aws-java-sdk-s3`  
 `java-jwt`  
 `commons-codec`  
-`springdoc-openapi-starter-webmvc-ui`
+`springdoc-openapi-starter-webmvc-ui`  
 `spring-boot-starter-security`
 
 # Swagger
