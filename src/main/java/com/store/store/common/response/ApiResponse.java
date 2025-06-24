@@ -1,4 +1,4 @@
-package com.store.store.common;
+package com.store.store.common.response;
 
 import java.util.List;
 

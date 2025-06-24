@@ -3,8 +3,8 @@ package com.store.store.health;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.store.store.common.ApiResponse;
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.response.ApiResponse;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

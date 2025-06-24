@@ -3,6 +3,8 @@ package com.store.store.common;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.store.store.common.response.ApiResponse;
+
 import java.util.List;
 
 public class ErrorHelper {

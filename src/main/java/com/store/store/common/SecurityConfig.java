@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.store.store.common.jwt.JwtAuthenticationFilter;
+import com.store.store.common.response.ApiResponse;
 
 @Configuration
 @EnableWebSecurity
