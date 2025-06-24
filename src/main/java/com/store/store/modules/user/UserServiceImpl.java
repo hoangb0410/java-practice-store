@@ -3,9 +3,12 @@ package com.store.store.modules.user;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.store.store.common.pagination.PaginateHelper;
+import com.store.store.common.pagination.PaginationRequest;
 import com.store.store.model.User;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
 import com.store.store.modules.user.dto.UpdateUserRequest;
@@ -21,8 +24,19 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public Object getUsers(PaginationRequest req) {
+        Specification<User> spec = (root, query, cb) -> {
+            if (req.getSearch() != null && !req.getSearch().isBlank()) {
+                return cb.like(cb.lower(root.get("name")), "%" + req.getSearch().toLowerCase() + "%");
+            }
+            return cb.conjunction();
+        };
+
+        if (Boolean.TRUE.equals(req.getAll())) {
+            return userRepository.findAll(spec);
+        }
+
+        return PaginateHelper.paginate(req, userRepository, spec);
     }
 
     @Override

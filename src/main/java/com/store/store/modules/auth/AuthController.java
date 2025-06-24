@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.store.store.common.ApiResponse;
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.response.ApiResponse;
 import com.store.store.model.User;
 import com.store.store.modules.auth.dto.AuthResponse;
 import com.store.store.modules.auth.dto.LoginRequest;

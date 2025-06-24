@@ -2,6 +2,7 @@ package com.store.store.modules.user;
 
 import java.util.List;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,8 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.store.store.common.ApiResponse;
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.pagination.PaginationRequest;
+import com.store.store.common.response.ApiResponse;
 import com.store.store.model.User;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
 import com.store.store.modules.user.dto.UpdateUserRequest;
@@ -36,9 +38,9 @@ public class UserController {
     @Operation(summary = "Get all users", description = "API for admin to fetch all registered users", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<ApiResponse<Object>> getUsers() {
+    public ResponseEntity<ApiResponse<Object>> getUsers(@ParameterObject PaginationRequest req) {
         try {
-            List<User> users = userService.getAllUsers();
+            Object users = userService.getUsers(req);
             return ResponseEntity.ok(ApiResponse.success(users, 200));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Login failed: " + e.getMessage());
