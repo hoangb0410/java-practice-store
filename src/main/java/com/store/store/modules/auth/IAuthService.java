@@ -1,16 +1,17 @@
 package com.store.store.modules.auth;
 
-import com.store.store.model.User;
-import com.store.store.modules.auth.dto.AuthResponse;
+import org.springframework.http.ResponseEntity;
+import com.store.store.common.response.ApiResponse;
 import com.store.store.modules.auth.dto.LoginRequest;
+import com.store.store.modules.auth.dto.RefreshTokenRequest;
 import com.store.store.modules.auth.dto.RegisterRequest;
 
 public interface IAuthService {
-    User register(RegisterRequest request);
+    ResponseEntity<ApiResponse<Object>> register(RegisterRequest request);
 
-    AuthResponse login(LoginRequest request);
+    ResponseEntity<ApiResponse<Object>> login(LoginRequest request);
 
-    void logout(Long userId);
+    ResponseEntity<ApiResponse<Object>> logout(Long userId);
 
-    AuthResponse refreshToken(String refreshToken);
+    ResponseEntity<ApiResponse<Object>> refreshToken(RefreshTokenRequest request);
 }

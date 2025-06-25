@@ -9,4 +9,6 @@ import com.store.store.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByPhone(String phone);
 }
