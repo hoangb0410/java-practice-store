@@ -1,14 +1,17 @@
 package com.store.store.modules.user;
 
-import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.store.store.common.ErrorHelper;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.pagination.PaginationRequest;
+import com.store.store.common.response.ApiResponse;
 import com.store.store.model.User;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
 import com.store.store.modules.user.dto.UpdateUserRequest;
@@ -24,68 +27,102 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public Object getUsers(PaginationRequest req) {
-        Specification<User> spec = (root, query, cb) -> {
-            if (req.getSearch() != null && !req.getSearch().isBlank()) {
-                return cb.like(cb.lower(root.get("name")), "%" + req.getSearch().toLowerCase() + "%");
+    public ResponseEntity<ApiResponse<Object>> getUsers(PaginationRequest req) {
+        try {
+            Specification<User> spec = (root, query, cb) -> {
+                if (req.getSearch() != null && !req.getSearch().isBlank()) {
+                    return cb.like(cb.lower(root.get("name")), "%" + req.getSearch().toLowerCase() + "%");
+                }
+                return cb.conjunction();
+            };
+
+            if (Boolean.TRUE.equals(req.getAll())) {
+                return ResponseEntity.ok(ApiResponse.success(userRepository.findAll(spec), 200));
             }
-            return cb.conjunction();
-        };
 
-        if (Boolean.TRUE.equals(req.getAll())) {
-            return userRepository.findAll(spec);
+            return ResponseEntity.ok(ApiResponse.success(PaginateHelper.paginate(req, userRepository, spec), 200));
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Get users failed: " + e.getMessage());
         }
-
-        return PaginateHelper.paginate(req, userRepository, spec);
     }
 
     @Override
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
+    public ResponseEntity<ApiResponse<Object>> deleteUser(Long id) {
+        try {
+            if (!userRepository.existsById(id)) {
+                return ErrorHelper.notFound("User not found");
+            }
+            userRepository.deleteById(id);
+            return ResponseEntity.ok(ApiResponse.success("User deleted successfully", 200));
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Delete user failed: " + e.getMessage());
         }
-        userRepository.deleteById(id);
     }
 
     @Override
-    public User findById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<ApiResponse<Object>> findById(Long id) {
+        try {
+            Optional<User> user = userRepository.findById(id);
+            if (user.isEmpty()) {
+                return ErrorHelper.notFound("User not found");
+            }
+            return ResponseEntity.ok(ApiResponse.success(user.get(), 200));
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Find user failed: " + e.getMessage());
+        }
     }
 
     @Override
-    public User updateUser(Long id, UpdateUserRequest request) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
-        if (request.getName() != null) {
-            user.setName(request.getName());
+    public ResponseEntity<ApiResponse<Object>> updateUser(Long id, UpdateUserRequest request) {
+        try {
+            Optional<User> optionalUser = userRepository.findById(id);
+            if (optionalUser.isEmpty()) {
+                return ErrorHelper.notFound("User not found with ID: " + id);
+            }
+            User user = optionalUser.get();
+
+            if (request.getName() != null) {
+                user.setName(request.getName());
+            }
+            if (request.getEmail() != null) {
+                user.setEmail(request.getEmail());
+            }
+            if (request.getPhone() != null) {
+                user.setPhone(request.getPhone());
+            }
+            userRepository.save(user);
+            return ResponseEntity.ok(ApiResponse.success(user, 200));
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Update user failed: " + e.getMessage());
         }
-        if (request.getEmail() != null) {
-            user.setEmail(request.getEmail());
-        }
-        if (request.getPhone() != null) {
-            user.setPhone(request.getPhone());
-        }
-        return userRepository.save(user);
     }
 
     @Override
-    public void changePassword(Long id, ChangePasswordRequest request) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new RuntimeException("Old password is incorrect");
-        }
+    public ResponseEntity<ApiResponse<Object>> changePassword(Long id, ChangePasswordRequest request) {
+        try {
+            Optional<User> optionalUser = userRepository.findById(id);
+            if (optionalUser.isEmpty()) {
+                return ErrorHelper.notFound("User not found");
+            }
+            User user = optionalUser.get();
 
-        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-            throw new RuntimeException("New password and confirm password do not match");
-        }
+            if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+                return ErrorHelper.badRequest("Old password is incorrect");
+            }
 
-        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
-            throw new RuntimeException("New password must be different from old password");
-        }
+            if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+                return ErrorHelper.badRequest("New password and confirm password do not match");
+            }
 
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        userRepository.save(user);
+            if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+                return ErrorHelper.badRequest("New password must be different from old password");
+            }
+
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            userRepository.save(user);
+            return ResponseEntity.ok(ApiResponse.success("Password changed successfully", 200));
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Change password failed: " + e.getMessage());
+        }
     }
 }
