@@ -2,13 +2,13 @@ package com.store.store.modules.user;
 
 import org.springframework.http.ResponseEntity;
 
-import com.store.store.common.pagination.PaginationRequest;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
+import com.store.store.modules.user.dto.GetUsersRequest;
 import com.store.store.modules.user.dto.UpdateUserRequest;
 
 public interface IUserService {
-    ResponseEntity<ApiResponse<Object>> getUsers(PaginationRequest req);
+    ResponseEntity<ApiResponse<Object>> getUsers(GetUsersRequest req);
 
     ResponseEntity<ApiResponse<Object>> deleteUser(Long id);
 
