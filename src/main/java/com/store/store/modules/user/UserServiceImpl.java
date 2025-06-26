@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
 import com.store.store.common.pagination.PaginateHelper;
-import com.store.store.common.pagination.PaginationRequest;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.User;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
+import com.store.store.modules.user.dto.GetUsersRequest;
 import com.store.store.modules.user.dto.UpdateUserRequest;
 
 @Service
@@ -27,7 +27,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> getUsers(PaginationRequest req) {
+    public ResponseEntity<ApiResponse<Object>> getUsers(GetUsersRequest req) {
         try {
             Specification<User> spec = (root, query, cb) -> {
                 if (req.getSearch() != null && !req.getSearch().isBlank()) {
@@ -85,9 +85,17 @@ public class UserServiceImpl implements IUserService {
                 user.setName(request.getName());
             }
             if (request.getEmail() != null) {
+                Optional<User> existingEmailUser = userRepository.findByEmail(request.getEmail());
+                if (existingEmailUser.isPresent() && !existingEmailUser.get().getId().equals(id)) {
+                    return ErrorHelper.badRequest("Email already exists");
+                }
                 user.setEmail(request.getEmail());
             }
             if (request.getPhone() != null) {
+                Optional<User> existingPhoneUser = userRepository.findByPhone(request.getPhone());
+                if (existingPhoneUser.isPresent() && !existingPhoneUser.get().getId().equals(id)) {
+                    return ErrorHelper.badRequest("Phone number already exists");
+                }
                 user.setPhone(request.getPhone());
             }
             userRepository.save(user);

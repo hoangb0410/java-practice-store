@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.store.store.common.pagination.PaginationRequest;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
+import com.store.store.modules.user.dto.GetUsersRequest;
 import com.store.store.modules.user.dto.UpdateUserRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,7 +34,7 @@ public class UserController {
     @Operation(summary = "Get all users", description = "API for admin to fetch all registered users", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<ApiResponse<Object>> getUsers(@ParameterObject PaginationRequest req) {
+    public ResponseEntity<ApiResponse<Object>> getUsers(@ParameterObject GetUsersRequest req) {
         return userService.getUsers(req);
     }
 
