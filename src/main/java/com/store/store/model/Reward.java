@@ -1,14 +1,12 @@
 package com.store.store.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,9 +39,8 @@ public class Reward extends BaseModel {
     @Column(name = "image_url")
     private String imageUrl;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "expiration_date", nullable = false)
-    private Date expirationDate;
+    private LocalDateTime expirationDate;
 
     @Column(nullable = false)
     private Integer quantity;

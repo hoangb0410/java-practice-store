@@ -11,8 +11,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,12 +29,10 @@ public class Store extends BaseModel {
     @Column(nullable = false)
     private String name;
 
-    @Email(message = "Invalid email format")
     @Column(nullable = false, unique = true)
     private String email;
 
     @JsonIgnore
-    @Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters")
     @Column(nullable = false)
     private String password;
 

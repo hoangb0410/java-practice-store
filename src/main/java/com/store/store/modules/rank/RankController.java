@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import com.store.store.modules.rank.dto.UpdateRankRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/ranks")
@@ -38,28 +40,29 @@ public class RankController {
     @Operation(summary = "Create ranks", description = "API to create rank", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> createRank(@RequestBody CreateRankRequest req) {
+    public ResponseEntity<ApiResponse<Object>> createRank(@Valid @RequestBody CreateRankRequest req) {
         return rankService.createRank(req);
     }
 
     @Operation(summary = "Get rank by ID", description = "API to fetch rank by ID", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> findById(Long id) {
+    public ResponseEntity<ApiResponse<Object>> findById(@PathVariable Long id) {
         return rankService.findById(id);
     }
 
     @Operation(summary = "Update rank", description = "API to update rank", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> updateRank(Long id, @RequestBody UpdateRankRequest req) {
+    public ResponseEntity<ApiResponse<Object>> updateRank(@PathVariable Long id,
+            @Valid @RequestBody UpdateRankRequest req) {
         return rankService.updateRank(id, req);
     }
 
     @Operation(summary = "Delete rank", description = "API to delete rank", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteRank(Long id) {
+    public ResponseEntity<ApiResponse<Object>> deleteRank(@PathVariable Long id) {
         return rankService.deleteRank(id);
     }
 }
