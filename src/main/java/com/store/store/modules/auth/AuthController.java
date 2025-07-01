@@ -22,12 +22,12 @@ public class AuthController {
     private IAuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Object>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<Object>> register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Object>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<Object>> login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
 

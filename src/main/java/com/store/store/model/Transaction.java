@@ -1,14 +1,12 @@
 package com.store.store.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,9 +41,8 @@ public class Transaction extends BaseModel {
     @Column(name = "points_earned", nullable = false)
     private Integer pointsEarned;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "transaction_date", nullable = false)
-    private Date transactionDate;
+    private LocalDateTime transactionDate;
 
     @Column(name = "point_type", nullable = false)
     private String pointType;
