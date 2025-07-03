@@ -1,7 +1,10 @@
 package com.store.store.modules.auth.dto;
 
+import com.store.store.model.Store;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -9,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthResponse {
-    private String accessToken;
-    private String refreshToken;
+@EqualsAndHashCode(callSuper = true)
+public class StoreAuthResponse extends AuthResponse {
+    private Store store;
 }
