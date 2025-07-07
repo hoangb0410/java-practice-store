@@ -59,10 +59,11 @@ public class User extends BaseModel {
     private Boolean isVerify = false;
 
     @Column(name = "rank_id", insertable = false, updatable = false)
-    private Integer rankId;
+    private Long rankId;
 
     @ManyToOne
     @JoinColumn(name = "rank_id")
+    @JsonIgnore
     private Rank rank;
 
     @ManyToMany
@@ -70,11 +71,14 @@ public class User extends BaseModel {
     private List<Store> stores;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<UserStore> userStores;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Transaction> transactions;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Redemption> redemptions;
 }

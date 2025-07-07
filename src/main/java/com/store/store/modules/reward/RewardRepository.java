@@ -9,4 +9,6 @@ import com.store.store.model.Reward;
 
 public interface RewardRepository extends JpaRepository<Reward, Long>, JpaSpecificationExecutor<Reward> {
     Optional<Reward> findByName(String name);
+
+    Optional<Reward> findByNameAndStoreId(String name, Long storeId);
 }

@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class Redemption extends BaseModel {
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)

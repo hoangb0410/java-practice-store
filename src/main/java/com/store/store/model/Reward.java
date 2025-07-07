@@ -1,6 +1,8 @@
 package com.store.store.model;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,10 +25,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class Reward extends BaseModel {
     @Column(name = "store_id", nullable = false)
-    private Integer storeId;
+    private Long storeId;
 
     @ManyToOne
     @JoinColumn(name = "store_id", insertable = false, updatable = false)
+    @JsonIgnore
     private Store store;
 
     @Column(nullable = false)
@@ -40,7 +43,7 @@ public class Reward extends BaseModel {
     private String imageUrl;
 
     @Column(name = "expiration_date", nullable = false)
-    private LocalDateTime expirationDate;
+    private LocalDate expirationDate;
 
     @Column(nullable = false)
     private Integer quantity;
