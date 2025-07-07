@@ -50,14 +50,18 @@ public class Store extends BaseModel {
 
     @ManyToMany
     @JoinTable(name = "users_stores", joinColumns = @JoinColumn(name = "store_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @JsonIgnore
     private List<User> users;
 
     @OneToMany(mappedBy = "store")
+    @JsonIgnore
     private List<UserStore> userStores;
 
     @OneToMany(mappedBy = "store")
+    @JsonIgnore
     private List<Reward> rewards;
 
     @OneToMany(mappedBy = "store")
+    @JsonIgnore
     private List<Transaction> transactions;
 }

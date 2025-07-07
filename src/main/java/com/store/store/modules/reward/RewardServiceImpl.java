@@ -2,11 +2,13 @@ package com.store.store.modules.reward;
 
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.jwt.JwtService;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Reward;
@@ -14,9 +16,15 @@ import com.store.store.modules.reward.dto.CreateRewardRequest;
 import com.store.store.modules.reward.dto.GetRewardsRequest;
 import com.store.store.modules.reward.dto.UpdateRewardRequest;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @Service
 public class RewardServiceImpl implements IRewardService {
     private final RewardRepository rewardRepository;
+    @Autowired
+    private HttpServletRequest request;
+    @Autowired
+    private JwtService jwtService;
 
     public RewardServiceImpl(RewardRepository rewardRepository) {
         this.rewardRepository = rewardRepository;
@@ -44,8 +52,21 @@ public class RewardServiceImpl implements IRewardService {
     @Override
     public ResponseEntity<ApiResponse<Object>> createReward(CreateRewardRequest req) {
         try {
-            if (rewardRepository.findByName(req.getName()).isPresent()) {
-                return ErrorHelper.badRequest("Reward with this name already exists");
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ErrorHelper.badRequest("No token provided");
+            }
+            String token = authHeader.substring(7);
+            String subject = jwtService.extractSubject(token);
+            String[] parts = subject.split(":");
+            if (parts.length != 2 || !"store".equals(parts[0])) {
+                return ErrorHelper.badRequest("Invalid token subject");
+            }
+
+            Long storeId = Long.parseLong(parts[1]);
+
+            if (rewardRepository.findByNameAndStoreId(req.getName(), storeId).isPresent()) {
+                return ErrorHelper.badRequest("Reward with this name already exists for this store");
             }
 
             Reward reward = Reward.builder()
@@ -55,6 +76,7 @@ public class RewardServiceImpl implements IRewardService {
                     .quantity(req.getQuantity())
                     .description(req.getDescription())
                     .imageUrl(req.getImageUrl())
+                    .storeId(storeId)
                     .build();
 
             rewardRepository.save(reward);
@@ -80,6 +102,18 @@ public class RewardServiceImpl implements IRewardService {
     @Override
     public ResponseEntity<ApiResponse<Object>> updateReward(Long id, UpdateRewardRequest req) {
         try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ErrorHelper.badRequest("No token provided");
+            }
+            String token = authHeader.substring(7);
+            String subject = jwtService.extractSubject(token);
+            String[] parts = subject.split(":");
+            if (parts.length != 2 || !"store".equals(parts[0])) {
+                return ErrorHelper.badRequest("Invalid token subject");
+            }
+
+            Long storeId = Long.parseLong(parts[1]);
             Optional<Reward> optionalReward = rewardRepository.findById(id);
             if (optionalReward.isEmpty()) {
                 return ErrorHelper.notFound("Reward not found with ID: " + id);
@@ -88,9 +122,9 @@ public class RewardServiceImpl implements IRewardService {
             Reward reward = optionalReward.get();
 
             if (req.getName() != null) {
-                Optional<Reward> existingReward = rewardRepository.findByName(req.getName());
+                Optional<Reward> existingReward = rewardRepository.findByNameAndStoreId(req.getName(), storeId);
                 if (existingReward.isPresent() && !existingReward.get().getId().equals(id)) {
-                    return ErrorHelper.badRequest("Reward with this name already exists");
+                    return ErrorHelper.badRequest("Reward with this name already exists for this store");
                 }
                 reward.setName(req.getName());
             }

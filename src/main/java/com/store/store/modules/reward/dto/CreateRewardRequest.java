@@ -1,6 +1,6 @@
 package com.store.store.modules.reward.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -21,8 +21,8 @@ public class CreateRewardRequest {
 
     @NotNull(message = "expirationDate is required")
     @FutureOrPresent(message = "expirationDate must not be in the past")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime expirationDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate expirationDate;
 
     @NotNull(message = "quantity is required")
     @Min(value = 0, message = "quantity must be a non-negative number")

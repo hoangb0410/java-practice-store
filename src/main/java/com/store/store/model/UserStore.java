@@ -20,14 +20,14 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class UserStore extends BaseModel {
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
     @Column(name = "store_id", nullable = false)
-    private Integer storeId;
+    private Long storeId;
 
     @ManyToOne
     @JoinColumn(name = "store_id", insertable = false, updatable = false)

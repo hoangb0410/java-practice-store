@@ -31,28 +31,28 @@ public class RewardController {
     }
 
     @Operation(summary = "Get all rewards", description = "API to fetch all rewards", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STORE')")
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getRewards(@ParameterObject GetRewardsRequest req) {
         return rewardService.getRewards(req);
     }
 
     @Operation(summary = "Create reward", description = "API to create reward", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('STORE')")
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> createReward(@Valid @RequestBody CreateRewardRequest req) {
         return rewardService.createReward(req);
     }
 
     @Operation(summary = "Get reward by ID", description = "API to get reward by ID", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STORE')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> findById(@PathVariable Long id) {
         return rewardService.findById(id);
     }
 
     @Operation(summary = "Update reward", description = "API to update reward", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('STORE')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> updateReward(@PathVariable Long id,
             @Valid @RequestBody UpdateRewardRequest req) {
@@ -60,7 +60,7 @@ public class RewardController {
     }
 
     @Operation(summary = "Delete reward", description = "API to delete reward", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STORE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> deleteReward(@PathVariable Long id) {
         return rewardService.deleteReward(id);
