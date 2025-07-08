@@ -1,13 +1,21 @@
 package com.store.store.modules.auth;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.email.EmailService;
+import com.store.store.common.email.OTPUtil;
 import com.store.store.common.jwt.JwtService;
 import com.store.store.common.redis.RedisService;
 import com.store.store.common.response.ApiResponse;
@@ -16,9 +24,11 @@ import com.store.store.model.User;
 import com.store.store.modules.auth.dto.LoginRequest;
 import com.store.store.modules.auth.dto.RefreshTokenRequest;
 import com.store.store.modules.auth.dto.RegisterRequest;
+import com.store.store.modules.auth.dto.SendOtpRequest;
 import com.store.store.modules.auth.dto.StoreAuthResponse;
 import com.store.store.modules.auth.dto.StoreRegisterRequest;
 import com.store.store.modules.auth.dto.UserAuthResponse;
+import com.store.store.modules.auth.dto.VerifyOtpRequest;
 import com.store.store.modules.store.StoreRepository;
 import com.store.store.modules.user.UserRepository;
 
@@ -27,16 +37,28 @@ import jakarta.servlet.http.HttpServletRequest;
 @Service
 public class AuthServiceImpl implements IAuthService {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private RedisService redisService;
-    @Autowired
-    private StoreRepository storeRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final RedisService redisService;
+    private final StoreRepository storeRepository;
+    private final EmailService emailService;
+    private final OTPUtil otpUtil;
+
+    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
+            JwtService jwtService, RedisService redisService, StoreRepository storeRepository,
+            EmailService emailService, OTPUtil otpUtil) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.redisService = redisService;
+        this.storeRepository = storeRepository;
+        this.emailService = emailService;
+        this.otpUtil = otpUtil;
+    }
+
+    @Value("${otp.secret-key}")
+    private String otpSecretKey;
 
     @Override
     public ResponseEntity<ApiResponse<Object>> register(RegisterRequest request) {
@@ -228,6 +250,91 @@ public class AuthServiceImpl implements IAuthService {
             return ResponseEntity.ok(ApiResponse.success(response, 200));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Store login failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<Object>> sendOTP(SendOtpRequest request) {
+        try {
+            String email = request.getEmail();
+            String hash = request.getHash(); // example: e46ef2b91c879a407ba7c194048f9485 - viethoangb0410+1@gmail.com
+
+            var userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ErrorHelper.notFound("User not found");
+            }
+
+            String checkHash = DigestUtils.md5DigestAsHex(
+                    (email + otpSecretKey + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                            .getBytes(StandardCharsets.UTF_8));
+
+            if (!checkHash.equals(hash)) {
+                return ErrorHelper.badRequest("HASH_IS_NOT_CORRECT");
+            }
+
+            String otp = otpUtil.generateOTP();
+            emailService.sendOTP(email, "Confirm OTP", otp);
+
+            long expiryTime = Instant.now().plusSeconds(300).toEpochMilli(); // 5 min
+
+            String encrypted = otpUtil.hashData(
+                    new JSONObject()
+                            .put("otp", otp)
+                            .put("time", expiryTime)
+                            .put("email", email)
+                            .put("isVerified", false)
+                            .toString());
+
+            User user = userOpt.get();
+            user.setOtp(otp);
+            user.setOtpExpireTime(300); // second
+            userRepository.save(user);
+
+            return ResponseEntity.ok(ApiResponse.success(encrypted, 200));
+
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Error sending OTP: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<Object>> verifyOTP(VerifyOtpRequest request) {
+        try {
+            String decrypted = otpUtil.decryptData(request.getHash());
+            JSONObject hashInfo = new JSONObject(decrypted);
+
+            String otp = hashInfo.getString("otp");
+            String email = hashInfo.getString("email");
+            long time = hashInfo.getLong("time");
+
+            if (Instant.now().toEpochMilli() > time) {
+                return ErrorHelper.internalServerError("OTP_TIMEOUT");
+            }
+
+            if (!otp.equals(request.getOtp())) {
+                return ErrorHelper.badRequest("OTP_INVALID");
+            }
+
+            var userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ErrorHelper.notFound("User not found");
+            }
+
+            User user = userOpt.get();
+            user.setIsVerify(true);
+            userRepository.save(user);
+
+            String newEncrypted = otpUtil.hashData(
+                    new JSONObject()
+                            .put("time", Instant.now().plusSeconds(300).toEpochMilli())
+                            .put("email", email)
+                            .put("isVerified", true)
+                            .toString());
+
+            return ResponseEntity.ok(ApiResponse.success(newEncrypted, 200));
+
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Error verifying OTP: " + e.getMessage());
         }
     }
 }

@@ -12,20 +12,14 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.store.store.model.Store;
 import com.store.store.model.User;
 
-import jakarta.annotation.PostConstruct;
-
 @Service
 public class JwtService {
 
     private final JwtProperties jwtProperties;
-    private Algorithm algorithm;
+    private final Algorithm algorithm;
 
     public JwtService(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
-    }
-
-    @PostConstruct
-    public void init() {
         this.algorithm = Algorithm.HMAC256(jwtProperties.getSecret());
     }
 

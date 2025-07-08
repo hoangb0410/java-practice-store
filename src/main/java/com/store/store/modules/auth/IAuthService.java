@@ -5,7 +5,9 @@ import com.store.store.common.response.ApiResponse;
 import com.store.store.modules.auth.dto.LoginRequest;
 import com.store.store.modules.auth.dto.RefreshTokenRequest;
 import com.store.store.modules.auth.dto.RegisterRequest;
+import com.store.store.modules.auth.dto.SendOtpRequest;
 import com.store.store.modules.auth.dto.StoreRegisterRequest;
+import com.store.store.modules.auth.dto.VerifyOtpRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -21,5 +23,9 @@ public interface IAuthService {
     ResponseEntity<ApiResponse<Object>> storeRegister(StoreRegisterRequest request);
 
     ResponseEntity<ApiResponse<Object>> storeLogin(LoginRequest request);
+
+    ResponseEntity<ApiResponse<Object>> sendOTP(SendOtpRequest request);
+
+    ResponseEntity<ApiResponse<Object>> verifyOTP(VerifyOtpRequest request);
 
 }
