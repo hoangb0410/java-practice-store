@@ -1,6 +1,5 @@
 package com.store.store.modules.auth;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,7 +10,9 @@ import com.store.store.common.response.ApiResponse;
 import com.store.store.modules.auth.dto.LoginRequest;
 import com.store.store.modules.auth.dto.RefreshTokenRequest;
 import com.store.store.modules.auth.dto.RegisterRequest;
+import com.store.store.modules.auth.dto.SendOtpRequest;
 import com.store.store.modules.auth.dto.StoreRegisterRequest;
+import com.store.store.modules.auth.dto.VerifyOtpRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -19,8 +20,11 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    @Autowired
-    private IAuthService authService;
+    private final IAuthService authService;
+
+    public AuthController(IAuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Object>> register(@Valid @RequestBody RegisterRequest request) {
@@ -50,5 +54,15 @@ public class AuthController {
     @PostMapping("/store/login")
     public ResponseEntity<ApiResponse<Object>> storeLogin(@Valid @RequestBody LoginRequest request) {
         return authService.storeLogin(request);
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<ApiResponse<Object>> sendOTP(@Valid @RequestBody SendOtpRequest request) {
+        return authService.sendOTP(request);
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<Object>> verifyOTP(@Valid @RequestBody VerifyOtpRequest request) {
+        return authService.verifyOTP(request);
     }
 }

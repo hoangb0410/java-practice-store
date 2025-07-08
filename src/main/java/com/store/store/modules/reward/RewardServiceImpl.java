@@ -2,7 +2,6 @@ package com.store.store.modules.reward;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,13 +20,13 @@ import jakarta.servlet.http.HttpServletRequest;
 @Service
 public class RewardServiceImpl implements IRewardService {
     private final RewardRepository rewardRepository;
-    @Autowired
-    private HttpServletRequest request;
-    @Autowired
-    private JwtService jwtService;
+    private final HttpServletRequest request;
+    private final JwtService jwtService;
 
-    public RewardServiceImpl(RewardRepository rewardRepository) {
+    public RewardServiceImpl(RewardRepository rewardRepository, HttpServletRequest request, JwtService jwtService) {
         this.rewardRepository = rewardRepository;
+        this.request = request;
+        this.jwtService = jwtService;
     }
 
     @Override
