@@ -68,6 +68,7 @@ public class User extends BaseModel {
 
     @ManyToMany
     @JoinTable(name = "users_stores", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "store_id"))
+    @JsonIgnore
     private List<Store> stores;
 
     @OneToMany(mappedBy = "user")
