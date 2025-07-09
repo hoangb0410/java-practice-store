@@ -3,6 +3,7 @@ package com.store.store.modules.reward;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,8 +41,10 @@ public class RewardController {
     @Operation(summary = "Create reward", description = "API to create reward", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('STORE')")
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> createReward(@Valid @RequestBody CreateRewardRequest req) {
-        return rewardService.createReward(req);
+    public ResponseEntity<ApiResponse<Object>> createReward(
+            @AuthenticationPrincipal(expression = "id") Long storeId,
+            @Valid @RequestBody CreateRewardRequest req) {
+        return rewardService.createReward(storeId, req);
     }
 
     @Operation(summary = "Get reward by ID", description = "API to get reward by ID", security = @SecurityRequirement(name = "bearerAuth"))
@@ -54,9 +57,11 @@ public class RewardController {
     @Operation(summary = "Update reward", description = "API to update reward", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('STORE')")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> updateReward(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Object>> updateReward(
+            @PathVariable Long id,
+            @AuthenticationPrincipal(expression = "id") Long storeId,
             @Valid @RequestBody UpdateRewardRequest req) {
-        return rewardService.updateReward(id, req);
+        return rewardService.updateReward(id, storeId, req);
     }
 
     @Operation(summary = "Delete reward", description = "API to delete reward", security = @SecurityRequirement(name = "bearerAuth"))

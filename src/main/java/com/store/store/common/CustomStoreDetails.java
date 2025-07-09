@@ -24,6 +24,10 @@ public class CustomStoreDetails implements UserDetails {
         return store.getId();
     }
 
+    public String getType() {
+        return "store";
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_STORE"));

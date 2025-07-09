@@ -15,18 +15,12 @@ import com.store.store.modules.reward.dto.CreateRewardRequest;
 import com.store.store.modules.reward.dto.GetRewardsRequest;
 import com.store.store.modules.reward.dto.UpdateRewardRequest;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 @Service
 public class RewardServiceImpl implements IRewardService {
     private final RewardRepository rewardRepository;
-    private final HttpServletRequest request;
-    private final JwtService jwtService;
 
-    public RewardServiceImpl(RewardRepository rewardRepository, HttpServletRequest request, JwtService jwtService) {
+    public RewardServiceImpl(RewardRepository rewardRepository, JwtService jwtService) {
         this.rewardRepository = rewardRepository;
-        this.request = request;
-        this.jwtService = jwtService;
     }
 
     @Override
@@ -49,21 +43,8 @@ public class RewardServiceImpl implements IRewardService {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> createReward(CreateRewardRequest req) {
+    public ResponseEntity<ApiResponse<Object>> createReward(Long storeId, CreateRewardRequest req) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ErrorHelper.badRequest("No token provided");
-            }
-            String token = authHeader.substring(7);
-            String subject = jwtService.extractSubject(token);
-            String[] parts = subject.split(":");
-            if (parts.length != 2 || !"store".equals(parts[0])) {
-                return ErrorHelper.badRequest("Invalid token subject");
-            }
-
-            Long storeId = Long.parseLong(parts[1]);
-
             if (rewardRepository.findByNameAndStoreId(req.getName(), storeId).isPresent()) {
                 return ErrorHelper.badRequest("Reward with this name already exists for this store");
             }
@@ -99,20 +80,8 @@ public class RewardServiceImpl implements IRewardService {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> updateReward(Long id, UpdateRewardRequest req) {
+    public ResponseEntity<ApiResponse<Object>> updateReward(Long id, Long storeId, UpdateRewardRequest req) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ErrorHelper.badRequest("No token provided");
-            }
-            String token = authHeader.substring(7);
-            String subject = jwtService.extractSubject(token);
-            String[] parts = subject.split(":");
-            if (parts.length != 2 || !"store".equals(parts[0])) {
-                return ErrorHelper.badRequest("Invalid token subject");
-            }
-
-            Long storeId = Long.parseLong(parts[1]);
             Optional<Reward> optionalReward = rewardRepository.findById(id);
             if (optionalReward.isEmpty()) {
                 return ErrorHelper.notFound("Reward not found with ID: " + id);

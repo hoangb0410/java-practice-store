@@ -9,14 +9,12 @@ import com.store.store.modules.auth.dto.SendOtpRequest;
 import com.store.store.modules.auth.dto.StoreRegisterRequest;
 import com.store.store.modules.auth.dto.VerifyOtpRequest;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 public interface IAuthService {
     ResponseEntity<ApiResponse<Object>> register(RegisterRequest request);
 
     ResponseEntity<ApiResponse<Object>> login(LoginRequest request);
 
-    ResponseEntity<ApiResponse<Object>> logout(HttpServletRequest userId);
+    ResponseEntity<ApiResponse<Object>> logout(Long id, String type);
 
     ResponseEntity<ApiResponse<Object>> refreshToken(RefreshTokenRequest request);
 
