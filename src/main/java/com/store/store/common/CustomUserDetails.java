@@ -24,6 +24,10 @@ public class CustomUserDetails implements UserDetails {
         return user.getId();
     }
 
+    public String getType() {
+        return "user";
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (user.getIsAdmin() != null && user.getIsAdmin()) {

@@ -1,6 +1,7 @@
 package com.store.store.modules.auth;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +15,6 @@ import com.store.store.modules.auth.dto.SendOtpRequest;
 import com.store.store.modules.auth.dto.StoreRegisterRequest;
 import com.store.store.modules.auth.dto.VerifyOtpRequest;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -37,8 +37,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Object>> logout(HttpServletRequest userId) {
-        return authService.logout(userId);
+    public ResponseEntity<ApiResponse<Object>> logout(
+            @AuthenticationPrincipal(expression = "id") Long id,
+            @AuthenticationPrincipal(expression = "type") String type) {
+        return authService.logout(id, type);
     }
 
     @PostMapping("/refresh-token")

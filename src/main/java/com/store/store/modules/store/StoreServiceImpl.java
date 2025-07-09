@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
@@ -11,13 +12,16 @@ import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Store;
 import com.store.store.modules.store.dto.GetStoreRequest;
+import com.store.store.modules.user.dto.ChangePasswordRequest;
 
 @Service
 public class StoreServiceImpl implements IStoreService {
     private final StoreRepository storeRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public StoreServiceImpl(StoreRepository storeRepository) {
+    public StoreServiceImpl(StoreRepository storeRepository, PasswordEncoder passwordEncoder) {
         this.storeRepository = storeRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -83,6 +87,35 @@ public class StoreServiceImpl implements IStoreService {
             return ResponseEntity.ok(ApiResponse.success("Store deleted successfully", 200));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Delete store failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<Object>> changePassword(Long id, ChangePasswordRequest request) {
+        try {
+            Optional<Store> optionalStore = storeRepository.findById(id);
+            if (optionalStore.isEmpty()) {
+                return ErrorHelper.notFound("Store not found");
+            }
+            Store store = optionalStore.get();
+
+            if (!passwordEncoder.matches(request.getOldPassword(), store.getPassword())) {
+                return ErrorHelper.badRequest("Old password is incorrect");
+            }
+
+            if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+                return ErrorHelper.badRequest("New password and confirm password do not match");
+            }
+
+            if (passwordEncoder.matches(request.getNewPassword(), store.getPassword())) {
+                return ErrorHelper.badRequest("New password must be different from old password");
+            }
+
+            store.setPassword(passwordEncoder.encode(request.getNewPassword()));
+            storeRepository.save(store);
+            return ResponseEntity.ok(ApiResponse.success("Password changed successfully", 200));
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Change password failed: " + e.getMessage());
         }
     }
 }

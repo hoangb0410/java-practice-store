@@ -30,8 +30,6 @@ import com.store.store.modules.auth.dto.VerifyOtpRequest;
 import com.store.store.modules.store.StoreRepository;
 import com.store.store.modules.user.UserRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 @Service
 public class AuthServiceImpl implements IAuthService {
 
@@ -127,26 +125,10 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     @Override
-    public ResponseEntity<ApiResponse<Object>> logout(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Object>> logout(Long id, String type) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ErrorHelper.badRequest("No token provided");
-            }
-
-            String token = authHeader.substring(7);
-            String subject = jwtService.extractSubject(token); // "user:123" or "store:456"
-            String[] parts = subject.split(":");
-            if (parts.length != 2) {
-                return ErrorHelper.badRequest("Invalid token");
-            }
-
-            String type = parts[0];
-            Long id = Long.parseLong(parts[1]);
-
             String key = "refresh_token:" + type + ":" + id;
             redisService.delete(key);
-
             return ResponseEntity.ok(ApiResponse.success("Logout successful", 200));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Logout failed: " + e.getMessage());
