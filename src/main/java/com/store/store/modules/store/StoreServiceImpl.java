@@ -12,6 +12,7 @@ import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Store;
 import com.store.store.modules.store.dto.GetStoreRequest;
+import com.store.store.modules.store.dto.UpdateStoreRequest;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
 
 @Service
@@ -116,6 +117,34 @@ public class StoreServiceImpl implements IStoreService {
             return ResponseEntity.ok(ApiResponse.success("Password changed successfully", 200));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Change password failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<Object>> updateStore(Long id, UpdateStoreRequest request) {
+        try {
+            Optional<Store> optionalStore = storeRepository.findById(id);
+            if (optionalStore.isEmpty()) {
+                return ErrorHelper.notFound("Store not found with ID: " + id);
+            }
+            Store store = optionalStore.get();
+
+            if (request.getName() != null) {
+                store.setName(request.getName());
+            }
+            if (request.getEmail() != null) {
+                Optional<Store> existingEmailStore = storeRepository.findByEmail(request.getEmail());
+                if (existingEmailStore.isPresent() && !existingEmailStore.get().getId().equals(id)) {
+                    return ErrorHelper.badRequest("Email already exists");
+                }
+                store.setEmail(request.getEmail());
+            }
+
+            storeRepository.save(store);
+            return ResponseEntity.ok(ApiResponse.success(store, 200));
+
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Update store failed: " + e.getMessage());
         }
     }
 }
