@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.store.store.common.response.ApiResponse;
 import com.store.store.modules.store.dto.GetStoreRequest;
+import com.store.store.modules.store.dto.UpdateStoreRequest;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,7 +53,7 @@ public class StoreController {
     }
 
     @Operation(summary = "Delete store by ID", description = "API to delete a specific store by ID", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> delete(@PathVariable Long id) {
         return storeService.delete(id);
@@ -64,5 +65,13 @@ public class StoreController {
     public ResponseEntity<ApiResponse<Object>> changePassword(@AuthenticationPrincipal(expression = "id") Long id,
             @Valid @RequestBody ChangePasswordRequest request) {
         return storeService.changePassword(id, request);
+    }
+
+    @Operation(summary = "Update store by ID", description = "API to update a specific store by ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyRole('ADMIN', 'STORE')")
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Object>> updateStore(@PathVariable Long id,
+            @Valid @RequestBody UpdateStoreRequest request) {
+        return storeService.updateStore(id, request);
     }
 }

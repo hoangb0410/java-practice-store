@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.store.store.common.response.ApiResponse;
 import com.store.store.modules.store.dto.GetStoreRequest;
+import com.store.store.modules.store.dto.UpdateStoreRequest;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
 
 public interface IStoreService {
@@ -16,4 +17,6 @@ public interface IStoreService {
     ResponseEntity<ApiResponse<Object>> delete(Long id);
 
     ResponseEntity<ApiResponse<Object>> changePassword(Long id, ChangePasswordRequest request);
+
+    ResponseEntity<ApiResponse<Object>> updateStore(Long id, UpdateStoreRequest request);
 }
