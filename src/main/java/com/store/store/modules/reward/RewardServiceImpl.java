@@ -7,20 +7,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
-import com.store.store.common.jwt.JwtService;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Reward;
+import com.store.store.model.Store;
 import com.store.store.modules.reward.dto.CreateRewardRequest;
 import com.store.store.modules.reward.dto.GetRewardsRequest;
 import com.store.store.modules.reward.dto.UpdateRewardRequest;
+import com.store.store.modules.store.StoreRepository;
 
 @Service
 public class RewardServiceImpl implements IRewardService {
     private final RewardRepository rewardRepository;
+    private final StoreRepository storeRepository;
 
-    public RewardServiceImpl(RewardRepository rewardRepository, JwtService jwtService) {
+    public RewardServiceImpl(RewardRepository rewardRepository, StoreRepository storeRepository) {
         this.rewardRepository = rewardRepository;
+        this.storeRepository = storeRepository;
     }
 
     @Override
@@ -49,6 +52,13 @@ public class RewardServiceImpl implements IRewardService {
                 return ErrorHelper.badRequest("Reward with this name already exists for this store");
             }
 
+            Optional<Store> optionalStore = storeRepository.findById(storeId);
+            if (optionalStore.isEmpty()) {
+                return ErrorHelper.notFound("Store not found with id: " + storeId);
+            }
+
+            Store store = optionalStore.get();
+
             Reward reward = Reward.builder()
                     .name(req.getName())
                     .pointsRequired(req.getPointsRequired())
@@ -56,7 +66,7 @@ public class RewardServiceImpl implements IRewardService {
                     .quantity(req.getQuantity())
                     .description(req.getDescription())
                     .imageUrl(req.getImageUrl())
-                    .storeId(storeId)
+                    .store(store)
                     .build();
 
             rewardRepository.save(reward);

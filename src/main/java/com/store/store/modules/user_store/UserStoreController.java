@@ -2,18 +2,23 @@ package com.store.store.modules.user_store;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.store.store.common.response.ApiResponse;
+import com.store.store.modules.user_store.dto.CreateTransactionRequest;
+import com.store.store.modules.user_store.dto.GetListTransactionRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/user-store")
@@ -48,5 +53,24 @@ public class UserStoreController {
     public ResponseEntity<ApiResponse<Object>> getListUsersOfStore(
             @PathVariable Long storeId) {
         return userStoreService.getListUsersOfStore(storeId);
+    }
+
+    @Operation(summary = "Create transaction", description = "API to create transaction for a user in a store", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasRole('STORE')")
+    @PostMapping("/transaction")
+    public ResponseEntity<ApiResponse<Object>> createTransaction(
+            @AuthenticationPrincipal(expression = "id") Long storeId,
+            @RequestParam Long userId,
+            @Valid @RequestBody CreateTransactionRequest request) {
+        return userStoreService.createTransaction(userId, storeId, request);
+    }
+
+    @Operation(summary = "Get list transactions", description = "API to get list transactions of a store", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasRole('STORE')")
+    @GetMapping("/transactions")
+    public ResponseEntity<ApiResponse<Object>> getListTransactions(
+            @AuthenticationPrincipal(expression = "id") Long storeId,
+            @Valid GetListTransactionRequest request) {
+        return userStoreService.getListTransactions(storeId, request);
     }
 }
