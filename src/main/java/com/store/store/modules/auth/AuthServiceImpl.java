@@ -17,6 +17,7 @@ import com.store.store.common.email.OTPUtil;
 import com.store.store.common.jwt.JwtService;
 import com.store.store.common.redis.RedisService;
 import com.store.store.common.response.ApiResponse;
+import com.store.store.model.Rank;
 import com.store.store.model.Store;
 import com.store.store.model.User;
 import com.store.store.modules.auth.dto.LoginRequest;
@@ -27,6 +28,7 @@ import com.store.store.modules.auth.dto.StoreAuthResponse;
 import com.store.store.modules.auth.dto.StoreRegisterRequest;
 import com.store.store.modules.auth.dto.UserAuthResponse;
 import com.store.store.modules.auth.dto.VerifyOtpRequest;
+import com.store.store.modules.rank.RankRepository;
 import com.store.store.modules.store.StoreRepository;
 import com.store.store.modules.user.UserRepository;
 
@@ -40,10 +42,11 @@ public class AuthServiceImpl implements IAuthService {
     private final StoreRepository storeRepository;
     private final EmailService emailService;
     private final OTPUtil otpUtil;
+    private final RankRepository rankRepository;
 
     public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
             JwtService jwtService, RedisService redisService, StoreRepository storeRepository,
-            EmailService emailService, OTPUtil otpUtil) {
+            EmailService emailService, OTPUtil otpUtil, RankRepository rankRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -51,6 +54,7 @@ public class AuthServiceImpl implements IAuthService {
         this.storeRepository = storeRepository;
         this.emailService = emailService;
         this.otpUtil = otpUtil;
+        this.rankRepository = rankRepository;
     }
 
     @Value("${otp.secret-key}")
@@ -66,11 +70,19 @@ public class AuthServiceImpl implements IAuthService {
                 return ErrorHelper.badRequest("Phone number already exists");
             }
 
+            Optional<Rank> lowestRankOpt = rankRepository.findTopByOrderByPointsThresholdAsc();
+            if (lowestRankOpt.isEmpty()) {
+                return ErrorHelper.badRequest("Default rank not found");
+            }
+
+            Rank lowestRank = lowestRankOpt.get();
+
             User user = User.builder()
                     .name(request.getName())
                     .email(request.getEmail())
                     .phone(request.getPhone())
                     .password(passwordEncoder.encode(request.getPassword()))
+                    .rank(lowestRank) // default rank
                     .build();
             userRepository.save(user);
             SendOtpRequest otpRequest = new SendOtpRequest();

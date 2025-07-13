@@ -6,9 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -58,18 +57,10 @@ public class User extends BaseModel {
     @Column(nullable = false)
     private Boolean isVerify = false;
 
-    @Column(name = "rank_id", insertable = false, updatable = false)
-    private Long rankId;
-
-    @ManyToOne
-    @JoinColumn(name = "rank_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rank_id", nullable = false)
     @JsonIgnore
     private Rank rank;
-
-    @ManyToMany
-    @JoinTable(name = "users_stores", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "store_id"))
-    @JsonIgnore
-    private List<Store> stores;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore

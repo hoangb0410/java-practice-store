@@ -1,4 +1,4 @@
-package com.store.store.modules.user_store;
+package com.store.store.modules.user_store.repositories;
 
 import java.util.Optional;
 
