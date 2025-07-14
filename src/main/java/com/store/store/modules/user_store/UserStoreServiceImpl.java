@@ -193,4 +193,19 @@ public class UserStoreServiceImpl implements IUserStoreService {
             return ErrorHelper.badRequest("Error fetching transactions: " + e.getMessage());
         }
     }
+
+    @Override
+    public ResponseEntity<ApiResponse<Object>> getTransactionDetails(Long storeId, Long transactionId) {
+        try {
+            Optional<Transaction> optionalTransaction = transactionRepository.findByIdAndStoreId(transactionId,
+                    storeId);
+            if (optionalTransaction.isEmpty()) {
+                return ErrorHelper.notFound("Transaction not found");
+            }
+            Transaction transaction = optionalTransaction.get();
+            return ResponseEntity.ok(ApiResponse.success(transaction, 200));
+        } catch (Exception e) {
+            return ErrorHelper.badRequest("Error fetching transaction details: " + e.getMessage());
+        }
+    }
 }
