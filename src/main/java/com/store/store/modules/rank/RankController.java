@@ -37,7 +37,7 @@ public class RankController {
         return rankService.getRanks(req);
     }
 
-    @Operation(summary = "Create ranks", description = "API to create rank", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Create rank", description = "API to create rank", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> createRank(@Valid @RequestBody CreateRankRequest req) {

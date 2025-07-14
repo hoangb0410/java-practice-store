@@ -16,4 +16,6 @@ public interface IUserStoreService {
     ResponseEntity<ApiResponse<Object>> createTransaction(Long storeId, Long userId, CreateTransactionRequest request);
 
     ResponseEntity<ApiResponse<Object>> getListTransactions(Long storeId, GetListTransactionRequest request);
+
+    ResponseEntity<ApiResponse<Object>> getTransactionDetails(Long storeId, Long transactionId);
 }

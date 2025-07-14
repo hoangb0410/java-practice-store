@@ -73,4 +73,13 @@ public class UserStoreController {
             @Valid GetListTransactionRequest request) {
         return userStoreService.getListTransactions(storeId, request);
     }
+
+    @Operation(summary = "Get transaction details", description = "API to get details of a transaction in a store", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasRole('STORE')")
+    @GetMapping("/transaction/{transactionId}")
+    public ResponseEntity<ApiResponse<Object>> getTransactionDetails(
+            @AuthenticationPrincipal(expression = "id") Long storeId,
+            @PathVariable Long transactionId) {
+        return userStoreService.getTransactionDetails(storeId, transactionId);
+    }
 }

@@ -2,6 +2,8 @@ package com.store.store.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -39,5 +41,6 @@ public class Rank extends BaseModel {
     private Integer maxPercentagePoints;
 
     @OneToMany(mappedBy = "rank")
+    @JsonIgnore
     private List<User> users;
 }

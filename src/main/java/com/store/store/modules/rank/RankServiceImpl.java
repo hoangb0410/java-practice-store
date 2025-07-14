@@ -1,26 +1,32 @@
 package com.store.store.modules.rank;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.store.store.common.ErrorHelper;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Rank;
+import com.store.store.model.User;
 import com.store.store.modules.rank.dto.CreateRankRequest;
 import com.store.store.modules.rank.dto.GetRanksRequest;
 import com.store.store.modules.rank.dto.UpdateRankRequest;
+import com.store.store.modules.user.UserRepository;
 
 @Service
 public class RankServiceImpl implements IRankService {
 
     private final RankRepository rankRepository;
+    private final UserRepository userRepository;
 
-    public RankServiceImpl(RankRepository rankRepository) {
+    public RankServiceImpl(RankRepository rankRepository, UserRepository userRepository) {
         this.rankRepository = rankRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -44,6 +50,7 @@ public class RankServiceImpl implements IRankService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ApiResponse<Object>> createRank(CreateRankRequest request) {
         try {
             if (rankRepository.findByName(request.getName()).isPresent()) {
@@ -59,6 +66,8 @@ public class RankServiceImpl implements IRankService {
                     .maxPercentagePoints(request.getMaxPercentagePoints())
                     .build();
             rankRepository.save(rank);
+            // Update user ranks after creating a new rank
+            updateAllUserRanks();
             return ResponseEntity.ok(ApiResponse.success(rank, 201));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Error create rank: " + e.getMessage());
@@ -79,6 +88,7 @@ public class RankServiceImpl implements IRankService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ApiResponse<Object>> updateRank(Long id, UpdateRankRequest request) {
         try {
             Optional<Rank> optionalRank = rankRepository.findById(id);
@@ -111,6 +121,8 @@ public class RankServiceImpl implements IRankService {
                 rank.setMaxPercentagePoints(request.getMaxPercentagePoints());
             }
             rankRepository.save(rank);
+            // Update user ranks after updating a rank
+            updateAllUserRanks();
             return ResponseEntity.ok(ApiResponse.success(rank, 200));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Update rank failed: " + e.getMessage());
@@ -118,15 +130,44 @@ public class RankServiceImpl implements IRankService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ApiResponse<Object>> deleteRank(Long id) {
         try {
             if (!rankRepository.existsById(id)) {
                 return ErrorHelper.notFound("Rank not found with ID: " + id);
             }
+            // Clear rank for all users associated with this rank
+            userRepository.clearRankByRankId(id);
+
             rankRepository.deleteById(id);
+            // Update user ranks after deleting a rank
+            updateAllUserRanks();
             return ResponseEntity.ok(ApiResponse.success("Rank deleted successfully", 200));
         } catch (Exception e) {
             return ErrorHelper.badRequest("Delete rank failed: " + e.getMessage());
+        }
+    }
+
+    private void updateAllUserRanks() {
+        try {
+            List<Rank> ranks = rankRepository.findAllByOrderByPointsThresholdDesc();
+            if (ranks.isEmpty()) {
+                userRepository.clearRankForAll();
+                return;
+            }
+            List<User> users = userRepository.findAll();
+            for (User u : users) {
+                for (Rank r : ranks) {
+                    if (u.getPoints() >= r.getPointsThreshold()) {
+                        u.setRank(r);
+                        break;
+                    }
+                }
+            }
+            userRepository.saveAll(users);
+        } catch (Exception e) {
+            System.out.println("Error while updating user ranks: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
