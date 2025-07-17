@@ -2,6 +2,8 @@ package com.store.store.model;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -24,6 +26,7 @@ import lombok.experimental.SuperBuilder;
 public class Redemption extends BaseModel {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private User user;
 
     @Column(name = "reward_name", nullable = false)
