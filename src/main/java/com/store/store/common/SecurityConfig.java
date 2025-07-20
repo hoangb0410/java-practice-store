@@ -13,7 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,19 +34,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/logout").authenticated()
                         .requestMatchers(
                                 "/auth/**",
                                 "/docs/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/health/**",
-                                "/users/**")
+                                "/health/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(authenticationEntryPoint())
-                        .accessDeniedHandler(accessDeniedHandler()))
+                        .authenticationEntryPoint(authenticationEntryPoint()))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -68,18 +66,6 @@ public class SecurityConfig {
             ApiResponse<Object> body = ApiResponse.error(
                     HttpStatus.UNAUTHORIZED.value(), "Unauthorized",
                     List.of("You must login to access this resource."));
-            new ObjectMapper().writeValue(response.getWriter(), body);
-        };
-    }
-
-    @Bean
-    public AccessDeniedHandler accessDeniedHandler() {
-        return (request, response, accessDeniedException) -> {
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            response.setContentType("application/json");
-            ApiResponse<Object> body = ApiResponse.error(
-                    HttpStatus.FORBIDDEN.value(), "Forbidden",
-                    List.of("You do not have permission to access this resource."));
             new ObjectMapper().writeValue(response.getWriter(), body);
         };
     }

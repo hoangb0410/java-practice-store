@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.exception.ApiException;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Rank;
@@ -45,7 +46,10 @@ public class RankServiceImpl implements IRankService {
 
             return ResponseEntity.ok(ApiResponse.success(PaginateHelper.paginate(req, rankRepository, spec), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching ranks: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching ranks: " + e.getMessage());
+            return null;
         }
     }
 
@@ -54,7 +58,7 @@ public class RankServiceImpl implements IRankService {
     public ResponseEntity<ApiResponse<Object>> createRank(CreateRankRequest request) {
         try {
             if (rankRepository.findByName(request.getName()).isPresent()) {
-                return ErrorHelper.badRequest("Rank with this name already exists");
+                ErrorHelper.badRequest("Rank with this name already exists");
             }
 
             Rank rank = Rank.builder()
@@ -70,7 +74,10 @@ public class RankServiceImpl implements IRankService {
             updateAllUserRanks();
             return ResponseEntity.ok(ApiResponse.success(rank, 201));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error create rank: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error create rank: " + e.getMessage());
+            return null;
         }
     }
 
@@ -79,11 +86,14 @@ public class RankServiceImpl implements IRankService {
         try {
             Optional<Rank> rank = rankRepository.findById(id);
             if (rank.isEmpty()) {
-                return ErrorHelper.notFound("Rank not found");
+                ErrorHelper.notFound("Rank not found");
             }
             return ResponseEntity.ok(ApiResponse.success(rank.get(), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Find rank failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Find rank failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -93,14 +103,14 @@ public class RankServiceImpl implements IRankService {
         try {
             Optional<Rank> optionalRank = rankRepository.findById(id);
             if (optionalRank.isEmpty()) {
-                return ErrorHelper.notFound("Rank not found with ID: " + id);
+                ErrorHelper.notFound("Rank not found with ID: " + id);
             }
             Rank rank = optionalRank.get();
 
             if (request.getName() != null) {
                 Optional<Rank> existingRank = rankRepository.findByName(request.getName());
                 if (existingRank.isPresent() && !existingRank.get().getId().equals(id)) {
-                    return ErrorHelper.badRequest("Rank with this name already exists");
+                    ErrorHelper.badRequest("Rank with this name already exists");
                 }
                 rank.setName(request.getName());
             }
@@ -125,7 +135,10 @@ public class RankServiceImpl implements IRankService {
             updateAllUserRanks();
             return ResponseEntity.ok(ApiResponse.success(rank, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Update rank failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Update rank failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -134,7 +147,7 @@ public class RankServiceImpl implements IRankService {
     public ResponseEntity<ApiResponse<Object>> deleteRank(Long id) {
         try {
             if (!rankRepository.existsById(id)) {
-                return ErrorHelper.notFound("Rank not found with ID: " + id);
+                ErrorHelper.notFound("Rank not found with ID: " + id);
             }
             // Clear rank for all users associated with this rank
             userRepository.clearRankByRankId(id);
@@ -144,7 +157,10 @@ public class RankServiceImpl implements IRankService {
             updateAllUserRanks();
             return ResponseEntity.ok(ApiResponse.success("Rank deleted successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Delete rank failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Delete rank failed: " + e.getMessage());
+            return null;
         }
     }
 

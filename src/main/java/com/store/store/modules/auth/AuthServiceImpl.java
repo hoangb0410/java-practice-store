@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.store.store.common.ErrorHelper;
 import com.store.store.common.email.EmailService;
 import com.store.store.common.email.OTPUtil;
+import com.store.store.common.exception.ApiException;
 import com.store.store.common.jwt.JwtService;
 import com.store.store.common.redis.RedisService;
 import com.store.store.common.response.ApiResponse;
@@ -64,15 +65,15 @@ public class AuthServiceImpl implements IAuthService {
     public ResponseEntity<ApiResponse<Object>> register(RegisterRequest request) {
         try {
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-                return ErrorHelper.badRequest("Email already exists");
+                ErrorHelper.badRequest("Email already exists");
             }
             if (userRepository.findByPhone(request.getPhone()).isPresent()) {
-                return ErrorHelper.badRequest("Phone number already exists");
+                ErrorHelper.badRequest("Phone number already exists");
             }
 
             Optional<Rank> lowestRankOpt = rankRepository.findTopByOrderByPointsThresholdAsc();
             if (lowestRankOpt.isEmpty()) {
-                return ErrorHelper.badRequest("Default rank not found");
+                ErrorHelper.badRequest("Default rank not found");
             }
 
             Rank lowestRank = lowestRankOpt.get();
@@ -97,7 +98,8 @@ public class AuthServiceImpl implements IAuthService {
 
             return ResponseEntity.ok(ApiResponse.success(data, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("User registration failed: " + e.getMessage());
+            ErrorHelper.badRequest("User registration failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -106,16 +108,16 @@ public class AuthServiceImpl implements IAuthService {
         try {
             Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
             if (optionalUser.isEmpty()) {
-                return ErrorHelper.badRequest("Invalid credentials");
+                ErrorHelper.badRequest("Invalid credentials");
             }
             User user = optionalUser.get();
 
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                return ErrorHelper.badRequest("Invalid credentials");
+                ErrorHelper.badRequest("Invalid credentials");
             }
 
             if (!Boolean.TRUE.equals(user.getIsVerify())) {
-                return ErrorHelper.badRequest("Your account is not verified yet.");
+                ErrorHelper.badRequest("Your account is not verified yet.");
             }
 
             String accessToken = jwtService.generateAccessToken(user);
@@ -132,7 +134,10 @@ public class AuthServiceImpl implements IAuthService {
 
             return ResponseEntity.ok(ApiResponse.success(response, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Login failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Login failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -143,7 +148,10 @@ public class AuthServiceImpl implements IAuthService {
             redisService.delete(key);
             return ResponseEntity.ok(ApiResponse.success("Logout successful", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Logout failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Logout failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -152,13 +160,13 @@ public class AuthServiceImpl implements IAuthService {
         try {
             String refreshToken = request.getRefreshToken();
             if (!jwtService.isTokenValid(refreshToken)) {
-                return ErrorHelper.badRequest("Invalid refresh token");
+                ErrorHelper.badRequest("Invalid refresh token");
             }
 
             String subject = jwtService.extractSubject(refreshToken);
             String[] parts = subject.split(":");
             if (parts.length != 2) {
-                return ErrorHelper.badRequest("Invalid token subject");
+                ErrorHelper.badRequest("Invalid token subject");
             }
 
             String type = parts[0];
@@ -166,13 +174,13 @@ public class AuthServiceImpl implements IAuthService {
             String key = "refresh_token:" + type + ":" + id;
             String storedToken = redisService.get(key);
             if (storedToken == null || !storedToken.equals(refreshToken)) {
-                return ErrorHelper.badRequest("Refresh token not found or mismatched");
+                ErrorHelper.badRequest("Refresh token not found or mismatched");
             }
 
             if ("user".equals(type)) {
                 Optional<User> user = userRepository.findById(id);
                 if (user.isEmpty()) {
-                    return ErrorHelper.notFound("User not found");
+                    ErrorHelper.notFound("User not found");
                 }
 
                 String newAccessToken = jwtService.generateAccessToken(user.get());
@@ -187,7 +195,7 @@ public class AuthServiceImpl implements IAuthService {
             } else if ("store".equals(type)) {
                 Optional<Store> store = storeRepository.findById(id);
                 if (store.isEmpty()) {
-                    return ErrorHelper.notFound("Store not found");
+                    ErrorHelper.notFound("Store not found");
                 }
 
                 String newAccessToken = jwtService.generateAccessToken(store.get());
@@ -200,11 +208,15 @@ public class AuthServiceImpl implements IAuthService {
 
                 return ResponseEntity.ok(ApiResponse.success(response, 200));
             } else {
-                return ErrorHelper.badRequest("Unknown token type");
+                ErrorHelper.badRequest("Unknown token type");
+                return null;
             }
 
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Token refresh failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Token refresh failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -212,7 +224,7 @@ public class AuthServiceImpl implements IAuthService {
     public ResponseEntity<ApiResponse<Object>> storeRegister(StoreRegisterRequest request) {
         try {
             if (storeRepository.findByEmail(request.getEmail()).isPresent()) {
-                return ErrorHelper.badRequest("Email already exists");
+                ErrorHelper.badRequest("Email already exists");
             }
 
             Store store = Store.builder()
@@ -233,7 +245,10 @@ public class AuthServiceImpl implements IAuthService {
             data.put("hash", hash);
             return ResponseEntity.ok(ApiResponse.success(data, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Store registration failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Store registration failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -242,20 +257,20 @@ public class AuthServiceImpl implements IAuthService {
         try {
             Optional<Store> optionalStore = storeRepository.findByEmail(request.getEmail());
             if (optionalStore.isEmpty()) {
-                return ErrorHelper.badRequest("Invalid credentials");
+                ErrorHelper.badRequest("Invalid credentials");
             }
             Store store = optionalStore.get();
 
             if (!passwordEncoder.matches(request.getPassword(), store.getPassword())) {
-                return ErrorHelper.badRequest("Invalid credentials");
+                ErrorHelper.badRequest("Invalid credentials");
             }
 
             if (!Boolean.TRUE.equals(store.getIsVerify())) {
-                return ErrorHelper.badRequest("Your store is not verified yet.");
+                ErrorHelper.badRequest("Your store is not verified yet.");
             }
 
             if (!Boolean.TRUE.equals(store.getIsApproved())) {
-                return ErrorHelper.badRequest("Your account is not approved yet.");
+                ErrorHelper.badRequest("Your account is not approved yet.");
             }
 
             String accessToken = jwtService.generateAccessToken(store);
@@ -272,7 +287,10 @@ public class AuthServiceImpl implements IAuthService {
 
             return ResponseEntity.ok(ApiResponse.success(response, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Store login failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Store login failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -284,7 +302,7 @@ public class AuthServiceImpl implements IAuthService {
 
             String limitKey = String.format("otp_limit:%s:%s", type, email);
             if (redisService.hasKey(limitKey)) {
-                return ErrorHelper.badRequest("Please wait 3 minutes before requesting another OTP");
+                ErrorHelper.badRequest("Please wait 3 minutes before requesting another OTP");
             }
 
             String otp = otpUtil.generateOTP();
@@ -305,7 +323,7 @@ public class AuthServiceImpl implements IAuthService {
             if (type.equalsIgnoreCase("user")) {
                 Optional<User> userOpt = userRepository.findByEmail(email);
                 if (userOpt.isEmpty()) {
-                    return ErrorHelper.notFound("User not found");
+                    ErrorHelper.notFound("User not found");
                 }
                 User user = userOpt.get();
                 user.setOtp(otp);
@@ -314,7 +332,7 @@ public class AuthServiceImpl implements IAuthService {
             } else {
                 Optional<Store> storeOpt = storeRepository.findByEmail(email);
                 if (storeOpt.isEmpty()) {
-                    return ErrorHelper.notFound("Store not found");
+                    ErrorHelper.notFound("Store not found");
                 }
                 Store store = storeOpt.get();
                 store.setOtp(otp);
@@ -325,7 +343,10 @@ public class AuthServiceImpl implements IAuthService {
             return ResponseEntity.ok(ApiResponse.success(encrypted, 200));
 
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error sending OTP: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error sending OTP: " + e.getMessage());
+            return null;
         }
     }
 
@@ -340,11 +361,11 @@ public class AuthServiceImpl implements IAuthService {
             long time = hashInfo.getLong("time");
 
             if (Instant.now().toEpochMilli() > time) {
-                return ErrorHelper.internalServerError("OTP_TIMEOUT");
+                ErrorHelper.internalServerError("OTP_TIMEOUT");
             }
 
             if (!otp.equals(request.getOtp())) {
-                return ErrorHelper.badRequest("OTP_INVALID");
+                ErrorHelper.badRequest("OTP_INVALID");
             }
 
             String type = request.getType().toLowerCase();
@@ -352,7 +373,7 @@ public class AuthServiceImpl implements IAuthService {
             if (type.equals("user")) {
                 Optional<User> userOpt = userRepository.findByEmail(email);
                 if (userOpt.isEmpty()) {
-                    return ErrorHelper.notFound("User not found");
+                    ErrorHelper.notFound("User not found");
                 }
                 User user = userOpt.get();
                 user.setIsVerify(true);
@@ -360,7 +381,7 @@ public class AuthServiceImpl implements IAuthService {
             } else if (type.equals("store")) {
                 Optional<Store> storeOpt = storeRepository.findByEmail(email);
                 if (storeOpt.isEmpty()) {
-                    return ErrorHelper.notFound("Store not found");
+                    ErrorHelper.notFound("Store not found");
                 }
                 Store store = storeOpt.get();
                 store.setIsVerify(true);
@@ -381,7 +402,10 @@ public class AuthServiceImpl implements IAuthService {
             return ResponseEntity.ok(ApiResponse.success(newEncrypted, 200));
 
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error verifying OTP: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error verifying OTP: " + e.getMessage());
+            return null;
         }
     }
 }

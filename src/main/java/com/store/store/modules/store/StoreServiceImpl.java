@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.exception.ApiException;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Store;
@@ -40,7 +41,10 @@ public class StoreServiceImpl implements IStoreService {
             }
             return ResponseEntity.ok(ApiResponse.success(PaginateHelper.paginate(req, storeRepository, spec), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching stores: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching stores: " + e.getMessage());
+            return null;
         }
     }
 
@@ -49,11 +53,11 @@ public class StoreServiceImpl implements IStoreService {
         try {
             Optional<Store> storeOpt = storeRepository.findById(id);
             if (storeOpt.isEmpty()) {
-                return ErrorHelper.notFound("Store not found");
+                ErrorHelper.notFound("Store not found");
             }
             Store store = storeOpt.get();
             if (store.getIsApproved()) {
-                return ErrorHelper.badRequest("Store is already approved");
+                ErrorHelper.badRequest("Store is already approved");
             }
 
             store.setIsApproved(true);
@@ -61,7 +65,10 @@ public class StoreServiceImpl implements IStoreService {
 
             return ResponseEntity.ok(ApiResponse.success("Store approved successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error approving store: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error approving store: " + e.getMessage());
+            return null;
         }
     }
 
@@ -70,11 +77,14 @@ public class StoreServiceImpl implements IStoreService {
         try {
             Optional<Store> storeOpt = storeRepository.findById(id);
             if (storeOpt.isEmpty()) {
-                return ErrorHelper.notFound("Store not found");
+                ErrorHelper.notFound("Store not found");
             }
             return ResponseEntity.ok(ApiResponse.success(storeOpt.get(), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching store by ID: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching store by ID: " + e.getMessage());
+            return null;
         }
     }
 
@@ -82,12 +92,15 @@ public class StoreServiceImpl implements IStoreService {
     public ResponseEntity<ApiResponse<Object>> delete(Long id) {
         try {
             if (!storeRepository.existsById(id)) {
-                return ErrorHelper.notFound("Store not found");
+                ErrorHelper.notFound("Store not found");
             }
             storeRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.success("Store deleted successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Delete store failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Delete store failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -96,27 +109,30 @@ public class StoreServiceImpl implements IStoreService {
         try {
             Optional<Store> optionalStore = storeRepository.findById(id);
             if (optionalStore.isEmpty()) {
-                return ErrorHelper.notFound("Store not found");
+                ErrorHelper.notFound("Store not found");
             }
             Store store = optionalStore.get();
 
             if (!passwordEncoder.matches(request.getOldPassword(), store.getPassword())) {
-                return ErrorHelper.badRequest("Old password is incorrect");
+                ErrorHelper.badRequest("Old password is incorrect");
             }
 
             if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-                return ErrorHelper.badRequest("New password and confirm password do not match");
+                ErrorHelper.badRequest("New password and confirm password do not match");
             }
 
             if (passwordEncoder.matches(request.getNewPassword(), store.getPassword())) {
-                return ErrorHelper.badRequest("New password must be different from old password");
+                ErrorHelper.badRequest("New password must be different from old password");
             }
 
             store.setPassword(passwordEncoder.encode(request.getNewPassword()));
             storeRepository.save(store);
             return ResponseEntity.ok(ApiResponse.success("Password changed successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Change password failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Change password failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -125,7 +141,7 @@ public class StoreServiceImpl implements IStoreService {
         try {
             Optional<Store> optionalStore = storeRepository.findById(id);
             if (optionalStore.isEmpty()) {
-                return ErrorHelper.notFound("Store not found with ID: " + id);
+                ErrorHelper.notFound("Store not found with ID: " + id);
             }
             Store store = optionalStore.get();
 
@@ -135,7 +151,7 @@ public class StoreServiceImpl implements IStoreService {
             if (request.getEmail() != null) {
                 Optional<Store> existingEmailStore = storeRepository.findByEmail(request.getEmail());
                 if (existingEmailStore.isPresent() && !existingEmailStore.get().getId().equals(id)) {
-                    return ErrorHelper.badRequest("Email already exists");
+                    ErrorHelper.badRequest("Email already exists");
                 }
                 store.setEmail(request.getEmail());
             }
@@ -144,7 +160,10 @@ public class StoreServiceImpl implements IStoreService {
             return ResponseEntity.ok(ApiResponse.success(store, 200));
 
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Update store failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Update store failed: " + e.getMessage());
+            return null;
         }
     }
 }

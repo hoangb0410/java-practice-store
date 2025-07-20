@@ -19,6 +19,7 @@ public class HealthController {
 
     @GetMapping("/check-error")
     public ResponseEntity<ApiResponse<Object>> checkHealthError() {
-        return ErrorHelper.badRequest("Invalid request");
+        ErrorHelper.badRequest("Invalid request");
+        return null;
     }
 }

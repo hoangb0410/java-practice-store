@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.exception.ApiException;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Rank;
@@ -52,7 +53,7 @@ public class RedemptionServiceImpl implements IRedemptionService {
         try {
             Optional<Reward> rewardOpt = rewardRepository.findById(request.getRewardId());
             if (rewardOpt.isEmpty()) {
-                return ErrorHelper.notFound("Reward not found");
+                ErrorHelper.notFound("Reward not found");
             }
 
             Reward reward = rewardOpt.get();
@@ -60,28 +61,28 @@ public class RedemptionServiceImpl implements IRedemptionService {
 
             Optional<User> userOpt = userRepository.findById(userId);
             if (userOpt.isEmpty()) {
-                return ErrorHelper.notFound("User not found");
+                ErrorHelper.notFound("User not found");
             }
 
             User user = userOpt.get();
 
             Optional<UserStore> userStoreOpt = userStoreRepository.findByUserIdAndStoreId(userId, storeId);
             if (userStoreOpt.isEmpty()) {
-                return ErrorHelper.badRequest("User has not been added to the store");
+                ErrorHelper.badRequest("User has not been added to the store");
             }
 
             int totalPoints = reward.getPointsRequired() * request.getQuantity();
             if (totalPoints > user.getPoints()) {
-                return ErrorHelper.badRequest("Not enough points to redeem");
+                ErrorHelper.badRequest("Not enough points to redeem");
             }
 
             if (totalPoints > 10000) {
-                return ErrorHelper.badRequest("Exceed maximum redeemable points");
+                ErrorHelper.badRequest("Exceed maximum redeemable points");
             }
 
             int remainingQuantity = reward.getQuantity() - request.getQuantity();
             if (remainingQuantity < 0) {
-                return ErrorHelper.badRequest("Not enough reward quantity");
+                ErrorHelper.badRequest("Not enough reward quantity");
             }
             reward.setQuantity(remainingQuantity);
             rewardRepository.save(reward);
@@ -110,7 +111,10 @@ public class RedemptionServiceImpl implements IRedemptionService {
             return ResponseEntity.ok(ApiResponse.success(redemption, 201));
 
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error creating redemption: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error creating redemption: " + e.getMessage());
+            return null;
         }
     }
 
@@ -136,7 +140,10 @@ public class RedemptionServiceImpl implements IRedemptionService {
             return ResponseEntity
                     .ok(ApiResponse.success(PaginateHelper.paginate(request, redemptionRepository, spec), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching redemptions: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching redemptions: " + e.getMessage());
+            return null;
         }
     }
 
@@ -145,11 +152,14 @@ public class RedemptionServiceImpl implements IRedemptionService {
         try {
             Optional<Redemption> redemptionOpt = redemptionRepository.findById(id);
             if (redemptionOpt.isEmpty()) {
-                return ErrorHelper.notFound("Redemption not found");
+                ErrorHelper.notFound("Redemption not found");
             }
             return ResponseEntity.ok(ApiResponse.success(redemptionOpt.get(), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching redemption details: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching redemption details: " + e.getMessage());
+            return null;
         }
     }
 }
