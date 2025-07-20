@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.exception.ApiException;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.Reward;
@@ -41,7 +42,10 @@ public class RewardServiceImpl implements IRewardService {
             }
             return ResponseEntity.ok(ApiResponse.success(PaginateHelper.paginate(req, rewardRepository, spec), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching rewards: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching rewards: " + e.getMessage());
+            return null;
         }
     }
 
@@ -49,12 +53,12 @@ public class RewardServiceImpl implements IRewardService {
     public ResponseEntity<ApiResponse<Object>> createReward(Long storeId, CreateRewardRequest req) {
         try {
             if (rewardRepository.findByNameAndStoreId(req.getName(), storeId).isPresent()) {
-                return ErrorHelper.badRequest("Reward with this name already exists for this store");
+                ErrorHelper.badRequest("Reward with this name already exists for this store");
             }
 
             Optional<Store> optionalStore = storeRepository.findById(storeId);
             if (optionalStore.isEmpty()) {
-                return ErrorHelper.notFound("Store not found with id: " + storeId);
+                ErrorHelper.notFound("Store not found with id: " + storeId);
             }
 
             Store store = optionalStore.get();
@@ -72,7 +76,10 @@ public class RewardServiceImpl implements IRewardService {
             rewardRepository.save(reward);
             return ResponseEntity.ok(ApiResponse.success(reward, 201));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error creating reward: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error creating reward: " + e.getMessage());
+            return null;
         }
     }
 
@@ -81,11 +88,14 @@ public class RewardServiceImpl implements IRewardService {
         try {
             Optional<Reward> reward = rewardRepository.findById(id);
             if (reward.isEmpty()) {
-                return ErrorHelper.notFound("Reward not found");
+                ErrorHelper.notFound("Reward not found");
             }
             return ResponseEntity.ok(ApiResponse.success(reward.get(), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching reward by ID: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching reward by ID: " + e.getMessage());
+            return null;
         }
     }
 
@@ -94,7 +104,7 @@ public class RewardServiceImpl implements IRewardService {
         try {
             Optional<Reward> optionalReward = rewardRepository.findById(id);
             if (optionalReward.isEmpty()) {
-                return ErrorHelper.notFound("Reward not found with ID: " + id);
+                ErrorHelper.notFound("Reward not found with ID: " + id);
             }
 
             Reward reward = optionalReward.get();
@@ -102,7 +112,7 @@ public class RewardServiceImpl implements IRewardService {
             if (req.getName() != null) {
                 Optional<Reward> existingReward = rewardRepository.findByNameAndStoreId(req.getName(), storeId);
                 if (existingReward.isPresent() && !existingReward.get().getId().equals(id)) {
-                    return ErrorHelper.badRequest("Reward with this name already exists for this store");
+                    ErrorHelper.badRequest("Reward with this name already exists for this store");
                 }
                 reward.setName(req.getName());
             }
@@ -127,7 +137,10 @@ public class RewardServiceImpl implements IRewardService {
             return ResponseEntity.ok(ApiResponse.success(reward, 200));
 
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error updating reward: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error updating reward: " + e.getMessage());
+            return null;
         }
     }
 
@@ -135,12 +148,15 @@ public class RewardServiceImpl implements IRewardService {
     public ResponseEntity<ApiResponse<Object>> deleteReward(Long id) {
         try {
             if (!rewardRepository.existsById(id)) {
-                return ErrorHelper.notFound("Reward not found with ID: " + id);
+                ErrorHelper.notFound("Reward not found with ID: " + id);
             }
             rewardRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.success("Reward deleted successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error deleting reward: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error deleting reward: " + e.getMessage());
+            return null;
         }
     }
 }

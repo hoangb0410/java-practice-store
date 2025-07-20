@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.exception.ApiException;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.model.User;
@@ -41,7 +42,10 @@ public class UserServiceImpl implements IUserService {
 
             return ResponseEntity.ok(ApiResponse.success(PaginateHelper.paginate(req, userRepository, spec), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Get users failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Get users failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -49,12 +53,15 @@ public class UserServiceImpl implements IUserService {
     public ResponseEntity<ApiResponse<Object>> deleteUser(Long id) {
         try {
             if (!userRepository.existsById(id)) {
-                return ErrorHelper.notFound("User not found");
+                ErrorHelper.notFound("User not found");
             }
             userRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.success("User deleted successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Delete user failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Delete user failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -63,11 +70,14 @@ public class UserServiceImpl implements IUserService {
         try {
             Optional<User> user = userRepository.findById(id);
             if (user.isEmpty()) {
-                return ErrorHelper.notFound("User not found");
+                ErrorHelper.notFound("User not found");
             }
             return ResponseEntity.ok(ApiResponse.success(user.get(), 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Find user failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Find user failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -76,7 +86,7 @@ public class UserServiceImpl implements IUserService {
         try {
             Optional<User> optionalUser = userRepository.findById(id);
             if (optionalUser.isEmpty()) {
-                return ErrorHelper.notFound("User not found with ID: " + id);
+                ErrorHelper.notFound("User not found with ID: " + id);
             }
             User user = optionalUser.get();
 
@@ -86,21 +96,24 @@ public class UserServiceImpl implements IUserService {
             if (request.getEmail() != null) {
                 Optional<User> existingEmailUser = userRepository.findByEmail(request.getEmail());
                 if (existingEmailUser.isPresent() && !existingEmailUser.get().getId().equals(id)) {
-                    return ErrorHelper.badRequest("Email already exists");
+                    ErrorHelper.badRequest("Email already exists");
                 }
                 user.setEmail(request.getEmail());
             }
             if (request.getPhone() != null) {
                 Optional<User> existingPhoneUser = userRepository.findByPhone(request.getPhone());
                 if (existingPhoneUser.isPresent() && !existingPhoneUser.get().getId().equals(id)) {
-                    return ErrorHelper.badRequest("Phone number already exists");
+                    ErrorHelper.badRequest("Phone number already exists");
                 }
                 user.setPhone(request.getPhone());
             }
             userRepository.save(user);
             return ResponseEntity.ok(ApiResponse.success(user, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Update user failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Update user failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -109,27 +122,30 @@ public class UserServiceImpl implements IUserService {
         try {
             Optional<User> optionalUser = userRepository.findById(id);
             if (optionalUser.isEmpty()) {
-                return ErrorHelper.notFound("User not found");
+                ErrorHelper.notFound("User not found");
             }
             User user = optionalUser.get();
 
             if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
-                return ErrorHelper.badRequest("Old password is incorrect");
+                ErrorHelper.badRequest("Old password is incorrect");
             }
 
             if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-                return ErrorHelper.badRequest("New password and confirm password do not match");
+                ErrorHelper.badRequest("New password and confirm password do not match");
             }
 
             if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
-                return ErrorHelper.badRequest("New password must be different from old password");
+                ErrorHelper.badRequest("New password must be different from old password");
             }
 
             user.setPassword(passwordEncoder.encode(request.getNewPassword()));
             userRepository.save(user);
             return ResponseEntity.ok(ApiResponse.success("Password changed successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Change password failed: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Change password failed: " + e.getMessage());
+            return null;
         }
     }
 }

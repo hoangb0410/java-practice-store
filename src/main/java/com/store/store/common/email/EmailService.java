@@ -7,6 +7,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.store.store.common.ErrorHelper;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
@@ -26,17 +28,21 @@ public class EmailService {
         this.htmlTemplateLoader = htmlTemplateLoader;
     }
 
-    public void sendOTP(String to, String subject, String otp) throws MessagingException, IOException {
-        String htmlContent = htmlTemplateLoader.loadOtpTemplate(otp);
+    public void sendOTP(String to, String subject, String otp) {
+        try {
+            String htmlContent = htmlTemplateLoader.loadOtpTemplate(otp);
 
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        helper.setFrom(String.format("%s <%s>", fromName, fromEmail));
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true);
+            helper.setFrom(String.format("%s <%s>", fromName, fromEmail));
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
 
-        mailSender.send(message);
+            mailSender.send(message);
+        } catch (MessagingException | IOException e) {
+            ErrorHelper.internalServerError("Failed to send OTP email" + e.getMessage());
+        }
     }
 }

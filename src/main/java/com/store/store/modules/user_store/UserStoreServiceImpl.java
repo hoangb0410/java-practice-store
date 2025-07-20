@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.store.store.common.ErrorHelper;
+import com.store.store.common.exception.ApiException;
 import com.store.store.common.pagination.PaginateHelper;
 import com.store.store.common.response.ApiResponse;
 import com.store.store.constants.PointType;
@@ -51,18 +52,18 @@ public class UserStoreServiceImpl implements IUserStoreService {
         try {
             Optional<User> optionalUser = userRepository.findById(userId);
             if (optionalUser.isEmpty()) {
-                return ErrorHelper.notFound("User not found with id: " + userId);
+                ErrorHelper.notFound("User not found with id: " + userId);
             }
             User user = optionalUser.get();
 
             Optional<Store> optionalStore = storeRepository.findById(storeId);
             if (optionalStore.isEmpty()) {
-                return ErrorHelper.notFound("Store not found with id: " + storeId);
+                ErrorHelper.notFound("Store not found with id: " + storeId);
             }
             Store store = optionalStore.get();
 
             if (userStoreRepository.existsByUserIdAndStoreId(userId, storeId)) {
-                return ErrorHelper.badRequest("User already added to this store");
+                ErrorHelper.badRequest("User already added to this store");
             }
 
             UserStore userStore = UserStore.builder()
@@ -73,7 +74,10 @@ public class UserStoreServiceImpl implements IUserStoreService {
 
             return ResponseEntity.ok(ApiResponse.success("Add user to store successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("An error occurred while adding user to store: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("An error occurred while adding user to store: " + e.getMessage());
+            return null;
         }
     }
 
@@ -82,14 +86,17 @@ public class UserStoreServiceImpl implements IUserStoreService {
         try {
             Optional<UserStore> optional = userStoreRepository.findByUserIdAndStoreId(userId, storeId);
             if (optional.isEmpty()) {
-                return ErrorHelper.notFound("User is not added to this store");
+                ErrorHelper.notFound("User is not added to this store");
             }
 
             userStoreRepository.delete(optional.get());
 
             return ResponseEntity.ok(ApiResponse.success("Removed user from store successfully", 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error removing user from store: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error removing user from store: " + e.getMessage());
+            return null;
         }
     }
 
@@ -98,12 +105,15 @@ public class UserStoreServiceImpl implements IUserStoreService {
         try {
             Optional<Store> optionalStore = storeRepository.findById(storeId);
             if (optionalStore.isEmpty()) {
-                return ErrorHelper.notFound("Store not found with id: " + storeId);
+                ErrorHelper.notFound("Store not found with id: " + storeId);
             }
             List<User> users = optionalStore.get().getUsers();
             return ResponseEntity.ok(ApiResponse.success(users, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error retrieving users of store: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error retrieving users of store: " + e.getMessage());
+            return null;
         }
     }
 
@@ -113,19 +123,19 @@ public class UserStoreServiceImpl implements IUserStoreService {
         try {
             Optional<User> optionalUser = userRepository.findById(userId);
             if (optionalUser.isEmpty()) {
-                return ErrorHelper.notFound("User not found with id: " + userId);
+                ErrorHelper.notFound("User not found with id: " + userId);
             }
             User user = optionalUser.get();
 
             Optional<Store> optionalStore = storeRepository.findById(storeId);
             if (optionalStore.isEmpty()) {
-                return ErrorHelper.notFound("Store not found with id: " + storeId);
+                ErrorHelper.notFound("Store not found with id: " + storeId);
             }
             Store store = optionalStore.get();
 
             Optional<UserStore> optionalUserStore = userStoreRepository.findByUserIdAndStoreId(userId, storeId);
             if (optionalUserStore.isEmpty()) {
-                return ErrorHelper.badRequest("User is not added to this store");
+                ErrorHelper.badRequest("User is not added to this store");
             }
             Rank rank = user.getRank();
 
@@ -152,7 +162,10 @@ public class UserStoreServiceImpl implements IUserStoreService {
             addPoints(user, point);
             return ResponseEntity.ok(ApiResponse.success(transaction, 201));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error creating transaction: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error creating transaction: " + e.getMessage());
+            return null;
         }
     }
 
@@ -190,7 +203,10 @@ public class UserStoreServiceImpl implements IUserStoreService {
                     PaginateHelper.paginate(req, transactionRepository, spec), 200));
 
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching transactions: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching transactions: " + e.getMessage());
+            return null;
         }
     }
 
@@ -200,12 +216,15 @@ public class UserStoreServiceImpl implements IUserStoreService {
             Optional<Transaction> optionalTransaction = transactionRepository.findByIdAndStoreId(transactionId,
                     storeId);
             if (optionalTransaction.isEmpty()) {
-                return ErrorHelper.notFound("Transaction not found");
+                ErrorHelper.notFound("Transaction not found");
             }
             Transaction transaction = optionalTransaction.get();
             return ResponseEntity.ok(ApiResponse.success(transaction, 200));
         } catch (Exception e) {
-            return ErrorHelper.badRequest("Error fetching transaction details: " + e.getMessage());
+            if (e instanceof ApiException)
+                throw e;
+            ErrorHelper.badRequest("Error fetching transaction details: " + e.getMessage());
+            return null;
         }
     }
 }
