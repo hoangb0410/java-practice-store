@@ -72,10 +72,12 @@ public class AuthServiceImpl implements IAuthService {
             }
 
             Optional<Rank> lowestRankOpt = rankRepository.findTopByOrderByPointsThresholdAsc();
+            System.out.println("AAA");
             if (lowestRankOpt.isEmpty()) {
+                System.out.println("BBB");
                 ErrorHelper.badRequest("Default rank not found");
             }
-
+            System.out.println("CCC");
             Rank lowestRank = lowestRankOpt.get();
 
             User user = User.builder()
@@ -98,6 +100,8 @@ public class AuthServiceImpl implements IAuthService {
 
             return ResponseEntity.ok(ApiResponse.success(data, 200));
         } catch (Exception e) {
+            if (e instanceof ApiException)
+                throw e;
             ErrorHelper.badRequest("User registration failed: " + e.getMessage());
             return null;
         }
