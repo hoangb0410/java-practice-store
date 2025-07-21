@@ -1,0 +1,15 @@
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    points INTEGER NOT NULL DEFAULT 0,
+    otp VARCHAR(255),
+    otp_expire_time INTEGER,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    is_verify BOOLEAN NOT NULL DEFAULT FALSE,
+    rank_id BIGINT NOT NULL REFERENCES ranks(id),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP
+);

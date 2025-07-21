@@ -47,7 +47,10 @@ cp src/main/resources/application-example.properties src/main/resources/applicat
 `java-jwt`  
 `commons-codec`  
 `springdoc-openapi-starter-webmvc-ui`  
-`spring-boot-starter-security`
+`spring-boot-starter-security`  
+`spring-boot-starter-aop`  
+`json`  
+`flyway-database-postgresql`.
 
 # Swagger
 
