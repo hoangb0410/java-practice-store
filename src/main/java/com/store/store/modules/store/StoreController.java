@@ -60,7 +60,7 @@ public class StoreController {
     }
 
     @Operation(summary = "Change password for store", description = "API to change password for store", security = @SecurityRequirement(name = "bearerAuth"))
-    @PreAuthorize("hasAnyRole('ADMIN', 'STORE')")
+    @PreAuthorize("hasRole('STORE')")
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Object>> changePassword(@AuthenticationPrincipal(expression = "id") Long id,
             @Valid @RequestBody ChangePasswordRequest request) {
