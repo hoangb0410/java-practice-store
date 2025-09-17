@@ -1,8 +1,11 @@
 package com.store.store.modules.user_store;
 
+import java.util.Optional;
+
 import org.springframework.http.ResponseEntity;
 
 import com.store.store.common.response.ApiResponse;
+import com.store.store.model.UserStore;
 import com.store.store.modules.user_store.dto.CreateTransactionRequest;
 import com.store.store.modules.user_store.dto.GetListTransactionRequest;
 
@@ -18,4 +21,6 @@ public interface IUserStoreService {
     ResponseEntity<ApiResponse<Object>> getListTransactions(Long storeId, GetListTransactionRequest request);
 
     ResponseEntity<ApiResponse<Object>> getTransactionDetails(Long storeId, Long transactionId);
+
+    Optional<UserStore> findByUserIdAndStoreId(Long userId, Long storeId);
 }

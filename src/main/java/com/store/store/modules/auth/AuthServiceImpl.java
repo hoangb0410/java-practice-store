@@ -29,33 +29,39 @@ import com.store.store.modules.auth.dto.StoreAuthResponse;
 import com.store.store.modules.auth.dto.StoreRegisterRequest;
 import com.store.store.modules.auth.dto.UserAuthResponse;
 import com.store.store.modules.auth.dto.VerifyOtpRequest;
-import com.store.store.modules.rank.RankRepository;
-import com.store.store.modules.store.StoreRepository;
-import com.store.store.modules.user.UserRepository;
+import com.store.store.modules.rank.IRankService;
+import com.store.store.modules.store.IStoreService;
+import com.store.store.modules.user.IUserService;
 
 @Service
 public class AuthServiceImpl implements IAuthService {
 
-    private final UserRepository userRepository;
+    private final IUserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RedisService redisService;
-    private final StoreRepository storeRepository;
+    private final IStoreService storeService;
     private final EmailService emailService;
     private final OTPUtil otpUtil;
-    private final RankRepository rankRepository;
+    private final IRankService rankService;
 
-    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            JwtService jwtService, RedisService redisService, StoreRepository storeRepository,
-            EmailService emailService, OTPUtil otpUtil, RankRepository rankRepository) {
-        this.userRepository = userRepository;
+    public AuthServiceImpl(
+            IUserService userService,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            RedisService redisService,
+            IStoreService storeService,
+            EmailService emailService,
+            OTPUtil otpUtil,
+            IRankService rankService) {
+        this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.redisService = redisService;
-        this.storeRepository = storeRepository;
+        this.storeService = storeService;
         this.emailService = emailService;
         this.otpUtil = otpUtil;
-        this.rankRepository = rankRepository;
+        this.rankService = rankService;
     }
 
     @Value("${otp.secret-key}")
@@ -64,20 +70,17 @@ public class AuthServiceImpl implements IAuthService {
     @Override
     public ResponseEntity<ApiResponse<Object>> register(RegisterRequest request) {
         try {
-            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            if (userService.findByEmail(request.getEmail()).isPresent()) {
                 ErrorHelper.badRequest("Email already exists");
             }
-            if (userRepository.findByPhone(request.getPhone()).isPresent()) {
+            if (userService.findByPhone(request.getPhone()).isPresent()) {
                 ErrorHelper.badRequest("Phone number already exists");
             }
 
-            Optional<Rank> lowestRankOpt = rankRepository.findTopByOrderByPointsThresholdAsc();
-            System.out.println("AAA");
+            Optional<Rank> lowestRankOpt = rankService.findTopByOrderByPointsThresholdAsc();
             if (lowestRankOpt.isEmpty()) {
-                System.out.println("BBB");
                 ErrorHelper.badRequest("Default rank not found");
             }
-            System.out.println("CCC");
             Rank lowestRank = lowestRankOpt.get();
 
             User user = User.builder()
@@ -87,7 +90,7 @@ public class AuthServiceImpl implements IAuthService {
                     .password(passwordEncoder.encode(request.getPassword()))
                     .rank(lowestRank) // default rank
                     .build();
-            userRepository.save(user);
+            userService.save(user);
             SendOtpRequest otpRequest = new SendOtpRequest();
             otpRequest.setEmail(user.getEmail());
             otpRequest.setType("user");
@@ -110,7 +113,7 @@ public class AuthServiceImpl implements IAuthService {
     @Override
     public ResponseEntity<ApiResponse<Object>> login(LoginRequest request) {
         try {
-            Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
+            Optional<User> optionalUser = userService.findByEmail(request.getEmail());
             if (optionalUser.isEmpty()) {
                 ErrorHelper.badRequest("Invalid credentials");
             }
@@ -182,7 +185,7 @@ public class AuthServiceImpl implements IAuthService {
             }
 
             if ("user".equals(type)) {
-                Optional<User> user = userRepository.findById(id);
+                Optional<User> user = userService.findOne(id);
                 if (user.isEmpty()) {
                     ErrorHelper.notFound("User not found");
                 }
@@ -197,7 +200,7 @@ public class AuthServiceImpl implements IAuthService {
 
                 return ResponseEntity.ok(ApiResponse.success(response, 200));
             } else if ("store".equals(type)) {
-                Optional<Store> store = storeRepository.findById(id);
+                Optional<Store> store = storeService.findOne(id);
                 if (store.isEmpty()) {
                     ErrorHelper.notFound("Store not found");
                 }
@@ -227,7 +230,7 @@ public class AuthServiceImpl implements IAuthService {
     @Override
     public ResponseEntity<ApiResponse<Object>> storeRegister(StoreRegisterRequest request) {
         try {
-            if (storeRepository.findByEmail(request.getEmail()).isPresent()) {
+            if (storeService.findByEmail(request.getEmail()).isPresent()) {
                 ErrorHelper.badRequest("Email already exists");
             }
 
@@ -237,7 +240,7 @@ public class AuthServiceImpl implements IAuthService {
                     .password(passwordEncoder.encode(request.getPassword()))
                     .isApproved(false)
                     .build();
-            storeRepository.save(store);
+            storeService.save(store);
             SendOtpRequest otpRequest = new SendOtpRequest();
             otpRequest.setEmail(store.getEmail());
             otpRequest.setType("store");
@@ -259,7 +262,7 @@ public class AuthServiceImpl implements IAuthService {
     @Override
     public ResponseEntity<ApiResponse<Object>> storeLogin(LoginRequest request) {
         try {
-            Optional<Store> optionalStore = storeRepository.findByEmail(request.getEmail());
+            Optional<Store> optionalStore = storeService.findByEmail(request.getEmail());
             if (optionalStore.isEmpty()) {
                 ErrorHelper.badRequest("Invalid credentials");
             }
@@ -325,23 +328,23 @@ public class AuthServiceImpl implements IAuthService {
                             .toString());
 
             if (type.equalsIgnoreCase("user")) {
-                Optional<User> userOpt = userRepository.findByEmail(email);
+                Optional<User> userOpt = userService.findByEmail(email);
                 if (userOpt.isEmpty()) {
                     ErrorHelper.notFound("User not found");
                 }
                 User user = userOpt.get();
                 user.setOtp(otp);
                 user.setOtpExpireTime(300);
-                userRepository.save(user);
+                userService.save(user);
             } else {
-                Optional<Store> storeOpt = storeRepository.findByEmail(email);
+                Optional<Store> storeOpt = storeService.findByEmail(email);
                 if (storeOpt.isEmpty()) {
                     ErrorHelper.notFound("Store not found");
                 }
                 Store store = storeOpt.get();
                 store.setOtp(otp);
                 store.setOtpExpireTime(300);
-                storeRepository.save(store);
+                storeService.save(store);
             }
 
             return ResponseEntity.ok(ApiResponse.success(encrypted, 200));
@@ -375,21 +378,21 @@ public class AuthServiceImpl implements IAuthService {
             String type = request.getType().toLowerCase();
 
             if (type.equals("user")) {
-                Optional<User> userOpt = userRepository.findByEmail(email);
+                Optional<User> userOpt = userService.findByEmail(email);
                 if (userOpt.isEmpty()) {
                     ErrorHelper.notFound("User not found");
                 }
                 User user = userOpt.get();
                 user.setIsVerify(true);
-                userRepository.save(user);
+                userService.save(user);
             } else if (type.equals("store")) {
-                Optional<Store> storeOpt = storeRepository.findByEmail(email);
+                Optional<Store> storeOpt = storeService.findByEmail(email);
                 if (storeOpt.isEmpty()) {
                     ErrorHelper.notFound("Store not found");
                 }
                 Store store = storeOpt.get();
                 store.setIsVerify(true);
-                storeRepository.save(store);
+                storeService.save(store);
             }
 
             String limitKey = String.format("otp_limit:%s:%s", type, email);

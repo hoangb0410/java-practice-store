@@ -1,8 +1,11 @@
 package com.store.store.modules.store;
 
+import java.util.Optional;
+
 import org.springframework.http.ResponseEntity;
 
 import com.store.store.common.response.ApiResponse;
+import com.store.store.model.Store;
 import com.store.store.modules.store.dto.GetStoreRequest;
 import com.store.store.modules.store.dto.UpdateStoreRequest;
 import com.store.store.modules.user.dto.ChangePasswordRequest;
@@ -19,4 +22,10 @@ public interface IStoreService {
     ResponseEntity<ApiResponse<Object>> changePassword(Long id, ChangePasswordRequest request);
 
     ResponseEntity<ApiResponse<Object>> updateStore(Long id, UpdateStoreRequest request);
+
+    Optional<Store> findOne(Long id);
+
+    Optional<Store> findByEmail(String email);
+
+    Store save(Store store);
 }

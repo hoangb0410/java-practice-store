@@ -32,28 +32,28 @@ public class RankController {
 
     @Operation(summary = "Get all ranks", description = "API to fetch all ranks", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
+    @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Object>> getRanks(@ParameterObject GetRanksRequest req) {
         return rankService.getRanks(req);
     }
 
     @Operation(summary = "Create rank", description = "API to create rank", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
+    @PostMapping("/admin")
     public ResponseEntity<ApiResponse<Object>> createRank(@Valid @RequestBody CreateRankRequest req) {
         return rankService.createRank(req);
     }
 
     @Operation(summary = "Get rank by ID", description = "API to fetch rank by ID", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     public ResponseEntity<ApiResponse<Object>> findById(@PathVariable Long id) {
         return rankService.findById(id);
     }
 
     @Operation(summary = "Update rank", description = "API to update rank", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     public ResponseEntity<ApiResponse<Object>> updateRank(@PathVariable Long id,
             @Valid @RequestBody UpdateRankRequest req) {
         return rankService.updateRank(id, req);
@@ -61,7 +61,7 @@ public class RankController {
 
     @Operation(summary = "Delete rank", description = "API to delete rank", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     public ResponseEntity<ApiResponse<Object>> deleteRank(@PathVariable Long id) {
         return rankService.deleteRank(id);
     }
