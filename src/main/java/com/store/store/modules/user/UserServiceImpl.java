@@ -1,5 +1,6 @@
 package com.store.store.modules.user;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -147,5 +148,45 @@ public class UserServiceImpl implements IUserService {
             ErrorHelper.badRequest("Change password failed: " + e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
+    public void saveAllUsers(List<User> users) {
+        userRepository.saveAll(users);
+    }
+
+    @Override
+    public void clearRankByRankId(Long rankId) {
+        userRepository.clearRankByRankId(rankId);
+    }
+
+    @Override
+    public void clearRankForAll() {
+        userRepository.clearRankForAll();
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findByPhone(String phone) {
+        return userRepository.findByPhone(phone);
+    }
+
+    @Override
+    public Optional<User> findOne(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public User save(User user) {
+        return userRepository.save(user);
     }
 }

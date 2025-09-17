@@ -166,4 +166,19 @@ public class StoreServiceImpl implements IStoreService {
             return null;
         }
     }
+
+    @Override
+    public Optional<Store> findOne(Long id) {
+        return storeRepository.findById(id);
+    }
+
+    @Override
+    public Optional<Store> findByEmail(String email) {
+        return storeRepository.findByEmail(email);
+    }
+
+    @Override
+    public Store save(Store store) {
+        return storeRepository.save(store);
+    }
 }

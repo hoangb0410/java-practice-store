@@ -15,16 +15,16 @@ import com.store.store.model.Store;
 import com.store.store.modules.reward.dto.CreateRewardRequest;
 import com.store.store.modules.reward.dto.GetRewardsRequest;
 import com.store.store.modules.reward.dto.UpdateRewardRequest;
-import com.store.store.modules.store.StoreRepository;
+import com.store.store.modules.store.IStoreService;
 
 @Service
 public class RewardServiceImpl implements IRewardService {
     private final RewardRepository rewardRepository;
-    private final StoreRepository storeRepository;
+    private final IStoreService storeService;
 
-    public RewardServiceImpl(RewardRepository rewardRepository, StoreRepository storeRepository) {
+    public RewardServiceImpl(RewardRepository rewardRepository, IStoreService storeService) {
         this.rewardRepository = rewardRepository;
-        this.storeRepository = storeRepository;
+        this.storeService = storeService;
     }
 
     @Override
@@ -56,7 +56,7 @@ public class RewardServiceImpl implements IRewardService {
                 ErrorHelper.badRequest("Reward with this name already exists for this store");
             }
 
-            Optional<Store> optionalStore = storeRepository.findById(storeId);
+            Optional<Store> optionalStore = storeService.findOne(storeId);
             if (optionalStore.isEmpty()) {
                 ErrorHelper.notFound("Store not found with id: " + storeId);
             }
@@ -158,5 +158,15 @@ public class RewardServiceImpl implements IRewardService {
             ErrorHelper.badRequest("Error deleting reward: " + e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public Optional<Reward> findOne(Long id) {
+        return rewardRepository.findById(id);
+    }
+
+    @Override
+    public Reward save(Reward reward) {
+        return rewardRepository.save(reward);
     }
 }

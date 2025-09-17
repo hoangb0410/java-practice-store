@@ -1,8 +1,11 @@
 package com.store.store.modules.reward;
 
+import java.util.Optional;
+
 import org.springframework.http.ResponseEntity;
 
 import com.store.store.common.response.ApiResponse;
+import com.store.store.model.Reward;
 import com.store.store.modules.reward.dto.CreateRewardRequest;
 import com.store.store.modules.reward.dto.GetRewardsRequest;
 import com.store.store.modules.reward.dto.UpdateRewardRequest;
@@ -17,4 +20,8 @@ public interface IRewardService {
     ResponseEntity<ApiResponse<Object>> updateReward(Long id, Long storeId, UpdateRewardRequest req);
 
     ResponseEntity<ApiResponse<Object>> deleteReward(Long id);
+
+    Optional<Reward> findOne(Long id);
+
+    Reward save(Reward reward);
 }

@@ -17,17 +17,17 @@ import com.store.store.model.User;
 import com.store.store.modules.rank.dto.CreateRankRequest;
 import com.store.store.modules.rank.dto.GetRanksRequest;
 import com.store.store.modules.rank.dto.UpdateRankRequest;
-import com.store.store.modules.user.UserRepository;
+import com.store.store.modules.user.IUserService;
 
 @Service
 public class RankServiceImpl implements IRankService {
 
     private final RankRepository rankRepository;
-    private final UserRepository userRepository;
+    private final IUserService userService;
 
-    public RankServiceImpl(RankRepository rankRepository, UserRepository userRepository) {
+    public RankServiceImpl(RankRepository rankRepository, IUserService userService) {
         this.rankRepository = rankRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @Override
@@ -150,7 +150,7 @@ public class RankServiceImpl implements IRankService {
                 ErrorHelper.notFound("Rank not found with ID: " + id);
             }
             // Clear rank for all users associated with this rank
-            userRepository.clearRankByRankId(id);
+            userService.clearRankByRankId(id);
 
             rankRepository.deleteById(id);
             // Update user ranks after deleting a rank
@@ -168,10 +168,10 @@ public class RankServiceImpl implements IRankService {
         try {
             List<Rank> ranks = rankRepository.findAllByOrderByPointsThresholdDesc();
             if (ranks.isEmpty()) {
-                userRepository.clearRankForAll();
+                userService.clearRankForAll();
                 return;
             }
-            List<User> users = userRepository.findAll();
+            List<User> users = userService.findAllUsers();
             for (User u : users) {
                 for (Rank r : ranks) {
                     if (u.getPoints() >= r.getPointsThreshold()) {
@@ -180,10 +180,31 @@ public class RankServiceImpl implements IRankService {
                     }
                 }
             }
-            userRepository.saveAll(users);
+            userService.saveAllUsers(users);
         } catch (Exception e) {
             System.out.println("Error while updating user ranks: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public Rank findRankForPoints(int points) {
+        List<Rank> ranks = rankRepository.findAllByOrderByPointsThresholdDesc();
+        for (Rank rank : ranks) {
+            if (points >= rank.getPointsThreshold()) {
+                return rank;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Optional<Rank> findTopByOrderByPointsThresholdAsc() {
+        return rankRepository.findTopByOrderByPointsThresholdAsc();
+    }
+
+    @Override
+    public List<Rank> findAllByOrderByPointsThresholdDesc() {
+        return rankRepository.findAllByOrderByPointsThresholdDesc();
     }
 }

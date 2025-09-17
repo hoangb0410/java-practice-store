@@ -33,7 +33,7 @@ public class UserController {
 
     @Operation(summary = "Get all users", description = "API for admin to fetch all registered users", security = @SecurityRequirement(name = "bearerAuth"))
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
+    @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Object>> getUsers(@ParameterObject GetUsersRequest req) {
         return userService.getUsers(req);
     }

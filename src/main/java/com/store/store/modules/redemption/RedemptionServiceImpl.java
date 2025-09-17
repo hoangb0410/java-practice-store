@@ -20,12 +20,12 @@ import com.store.store.model.Redemption;
 import com.store.store.model.Reward;
 import com.store.store.model.User;
 import com.store.store.model.UserStore;
-import com.store.store.modules.rank.RankRepository;
+import com.store.store.modules.rank.IRankService;
 import com.store.store.modules.redemption.dto.CreateRedemptionRequest;
 import com.store.store.modules.redemption.dto.GetListRedemptionsRequest;
-import com.store.store.modules.reward.RewardRepository;
-import com.store.store.modules.user.UserRepository;
-import com.store.store.modules.user_store.repositories.UserStoreRepository;
+import com.store.store.modules.reward.IRewardService;
+import com.store.store.modules.user.IUserService;
+import com.store.store.modules.user_store.IUserStoreService;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -33,25 +33,29 @@ import jakarta.persistence.criteria.Predicate;
 public class RedemptionServiceImpl implements IRedemptionService {
 
     private final RedemptionRepository redemptionRepository;
-    private final RewardRepository rewardRepository;
-    private final UserRepository userRepository;
-    private final UserStoreRepository userStoreRepository;
-    private final RankRepository rankRepository;
+    private final IRewardService rewardService;
+    private final IUserService userService;
+    private final IUserStoreService userStoreService;
+    private final IRankService rankService;
 
-    public RedemptionServiceImpl(RedemptionRepository redemptionRepository, RewardRepository rewardRepository,
-            UserRepository userRepository, UserStoreRepository userStoreRepository, RankRepository rankRepository) {
+    public RedemptionServiceImpl(
+            RedemptionRepository redemptionRepository,
+            IRewardService rewardService,
+            IUserService userService,
+            IUserStoreService userStoreService,
+            IRankService rankService) {
         this.redemptionRepository = redemptionRepository;
-        this.rewardRepository = rewardRepository;
-        this.userRepository = userRepository;
-        this.userStoreRepository = userStoreRepository;
-        this.rankRepository = rankRepository;
+        this.rewardService = rewardService;
+        this.userService = userService;
+        this.userStoreService = userStoreService;
+        this.rankService = rankService;
     }
 
     @Override
     @Transactional
     public ResponseEntity<ApiResponse<Object>> createRedemption(Long userId, CreateRedemptionRequest request) {
         try {
-            Optional<Reward> rewardOpt = rewardRepository.findById(request.getRewardId());
+            Optional<Reward> rewardOpt = rewardService.findOne(request.getRewardId());
             if (rewardOpt.isEmpty()) {
                 ErrorHelper.notFound("Reward not found");
             }
@@ -59,14 +63,14 @@ public class RedemptionServiceImpl implements IRedemptionService {
             Reward reward = rewardOpt.get();
             Long storeId = reward.getStore().getId();
 
-            Optional<User> userOpt = userRepository.findById(userId);
+            Optional<User> userOpt = userService.findOne(userId);
             if (userOpt.isEmpty()) {
                 ErrorHelper.notFound("User not found");
             }
 
             User user = userOpt.get();
 
-            Optional<UserStore> userStoreOpt = userStoreRepository.findByUserIdAndStoreId(userId, storeId);
+            Optional<UserStore> userStoreOpt = userStoreService.findByUserIdAndStoreId(userId, storeId);
             if (userStoreOpt.isEmpty()) {
                 ErrorHelper.badRequest("User has not been added to the store");
             }
@@ -85,7 +89,7 @@ public class RedemptionServiceImpl implements IRedemptionService {
                 ErrorHelper.badRequest("Not enough reward quantity");
             }
             reward.setQuantity(remainingQuantity);
-            rewardRepository.save(reward);
+            rewardService.save(reward);
 
             Redemption redemption = Redemption.builder()
                     .user(user)
@@ -98,13 +102,13 @@ public class RedemptionServiceImpl implements IRedemptionService {
 
             int newPoints = user.getPoints() - totalPoints;
             user.setPoints(newPoints);
-            userRepository.save(user);
+            userService.save(user);
 
-            List<Rank> ranks = rankRepository.findAllByOrderByPointsThresholdDesc();
+            List<Rank> ranks = rankService.findAllByOrderByPointsThresholdDesc();
             for (Rank rank : ranks) {
                 if (newPoints >= rank.getPointsThreshold()) {
                     user.setRank(rank);
-                    userRepository.save(user);
+                    userService.save(user);
                     break;
                 }
             }

@@ -19,9 +19,9 @@ import com.store.store.model.Store;
 import com.store.store.model.Transaction;
 import com.store.store.model.User;
 import com.store.store.model.UserStore;
-import com.store.store.modules.rank.RankRepository;
-import com.store.store.modules.store.StoreRepository;
-import com.store.store.modules.user.UserRepository;
+import com.store.store.modules.rank.IRankService;
+import com.store.store.modules.store.IStoreService;
+import com.store.store.modules.user.IUserService;
 import com.store.store.modules.user_store.dto.CreateTransactionRequest;
 import com.store.store.modules.user_store.dto.GetListTransactionRequest;
 import com.store.store.modules.user_store.repositories.TransactionRepository;
@@ -32,31 +32,34 @@ import jakarta.persistence.criteria.Predicate;
 @Service
 public class UserStoreServiceImpl implements IUserStoreService {
     private final UserStoreRepository userStoreRepository;
-    private final UserRepository userRepository;
-    private final StoreRepository storeRepository;
-    private final RankRepository rankRepository;
+    private final IUserService userService;
+    private final IStoreService storeService;
+    private final IRankService rankService;
     private final TransactionRepository transactionRepository;
 
-    public UserStoreServiceImpl(UserStoreRepository userStoreRepository, UserRepository userRepository,
-            StoreRepository storeRepository, RankRepository rankRepository,
+    public UserStoreServiceImpl(
+            UserStoreRepository userStoreRepository,
+            IUserService userService,
+            IStoreService storeService,
+            IRankService rankService,
             TransactionRepository transactionRepository) {
         this.userStoreRepository = userStoreRepository;
-        this.userRepository = userRepository;
-        this.storeRepository = storeRepository;
-        this.rankRepository = rankRepository;
+        this.userService = userService;
+        this.storeService = storeService;
+        this.rankService = rankService;
         this.transactionRepository = transactionRepository;
     }
 
     @Override
     public ResponseEntity<ApiResponse<Object>> addUserToStore(Long userId, Long storeId) {
         try {
-            Optional<User> optionalUser = userRepository.findById(userId);
+            Optional<User> optionalUser = userService.findOne(userId);
             if (optionalUser.isEmpty()) {
                 ErrorHelper.notFound("User not found with id: " + userId);
             }
             User user = optionalUser.get();
 
-            Optional<Store> optionalStore = storeRepository.findById(storeId);
+            Optional<Store> optionalStore = storeService.findOne(storeId);
             if (optionalStore.isEmpty()) {
                 ErrorHelper.notFound("Store not found with id: " + storeId);
             }
@@ -103,7 +106,7 @@ public class UserStoreServiceImpl implements IUserStoreService {
     @Override
     public ResponseEntity<ApiResponse<Object>> getListUsersOfStore(Long storeId) {
         try {
-            Optional<Store> optionalStore = storeRepository.findById(storeId);
+            Optional<Store> optionalStore = storeService.findOne(storeId);
             if (optionalStore.isEmpty()) {
                 ErrorHelper.notFound("Store not found with id: " + storeId);
             }
@@ -121,13 +124,13 @@ public class UserStoreServiceImpl implements IUserStoreService {
     public ResponseEntity<ApiResponse<Object>> createTransaction(Long userId, Long storeId,
             CreateTransactionRequest request) {
         try {
-            Optional<User> optionalUser = userRepository.findById(userId);
+            Optional<User> optionalUser = userService.findOne(userId);
             if (optionalUser.isEmpty()) {
                 ErrorHelper.notFound("User not found with id: " + userId);
             }
             User user = optionalUser.get();
 
-            Optional<Store> optionalStore = storeRepository.findById(storeId);
+            Optional<Store> optionalStore = storeService.findOne(storeId);
             if (optionalStore.isEmpty()) {
                 ErrorHelper.notFound("Store not found with id: " + storeId);
             }
@@ -172,14 +175,11 @@ public class UserStoreServiceImpl implements IUserStoreService {
     private void addPoints(User user, int addedPoints) {
         int newPoints = user.getPoints() + addedPoints;
         user.setPoints(newPoints);
-        List<Rank> ranks = rankRepository.findAllByOrderByPointsThresholdDesc();
-        for (Rank rank : ranks) {
-            if (newPoints >= rank.getPointsThreshold()) {
-                user.setRank(rank);
-                break;
-            }
+        Rank newRank = rankService.findRankForPoints(newPoints);
+        if (newRank != null) {
+            user.setRank(newRank);
         }
-        userRepository.save(user);
+        userService.save(user);
     }
 
     @Override
@@ -226,5 +226,10 @@ public class UserStoreServiceImpl implements IUserStoreService {
             ErrorHelper.badRequest("Error fetching transaction details: " + e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public Optional<UserStore> findByUserIdAndStoreId(Long userId, Long storeId) {
+        return userStoreRepository.findByUserIdAndStoreId(userId, storeId);
     }
 }
